@@ -1,0 +1,67 @@
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[project]
+license-files = ["LICENSE"]
+license = "AGPL-3.0-only"
+name = "nbrowser"
+version = "0.1.0"
+description = "nBrowser: compact browser evidence and fixture-proven effects"
+authors = [{ name = "NOTT contributors" }]
+requires-python = ">=3.14"
+dependencies = [
+    # The official MCP Python SDK serves stdio and Streamable HTTP (`main.py`).
+    "mcp>=2.3",
+    "nott-spine",
+    "nott-netdoor",
+    # The capture root a managed_purgeable capture is kept in (nott_database.captures),
+    # and the credential vault store (nbrowser.sqlite3).
+    "nott-database",
+]
+
+[tool.uv.sources]
+nott-spine = { workspace = true }
+nott-netdoor = { workspace = true }
+nott-database = { workspace = true }
+
+[project.urls]
+Homepage = "https://no.tt"
+Repository = "https://github.com/menot-you/n-browser"
+Documentation = "https://github.com/menot-you/n-browser/tree/main/docs"
+Issues = "https://github.com/menot-you/n-browser/issues"
+
+[project.scripts]
+nbrowser = "nbrowser.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0.0", "pytest-cov>=7.0.0", "pytest-xdist>=3.6", "hypothesis>=6.0", "ruff>=0.16.4", "mypy>=2.3.1", "mutmut==3.7.0"]
+
+[tool.pytest.ini_options]
+addopts = []
+
+[tool.python]
+xdist = "loadfile"
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.coverage.report]
+exclude_lines = []
+partial_branches = []
+
+[tool.mutmut]
+# Stock mutmut 3.7 (campaign mutmut-standard). Each mutant runs only the tests its
+# function's stats run recorded; xdist workers would lose those stats.
+# The launcher tests read npm/bin, test_packaging_distribution reads python/README.md,
+# and test_docs_surface_counts reads README.md from the member root.
+source_paths = ["nbrowser"]
+also_copy = ["npm", "python", "README.md"]
+pytest_add_cli_args = ["-p", "no:xdist"]
+pytest_add_cli_args_test_selection = ["tests"]
+
+[tool.uv.workspace]
+members = ["packages/database", "packages/netdoor", "packages/spine"]

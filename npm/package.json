@@ -1,0 +1,16 @@
+{
+  "name": "@nott/nbrowser",
+  "version": "0.1.0",
+  "description": "nBrowser: compact browser evidence and fixture-proven effects",
+  "bin": {
+    "nbrowser": "./bin/nbrowser.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "license": "AGPL-3.0-only"
+}
