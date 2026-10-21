@@ -1,225 +1,172 @@
-# nBROWSER
+<p align="center">
+  <img src="docs/figures/hero-nbrowser-dark.svg#gh-dark-mode-only" alt="nBROWSER, part of the NOTT family: the live web for your agent, as cited Markdown. Private and metadata addresses are refused.">
+  <img src="docs/figures/hero-nbrowser-light.svg#gh-light-mode-only" alt="nBROWSER, part of the NOTT family: the live web for your agent, as cited Markdown. Private and metadata addresses are refused.">
+</p>
 
-![Read web pages as compact evidence through explicit browser and network boundaries.](docs/figures/browser.svg)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-E4733A?labelColor=0F0E0D" alt="License: AGPL-3.0"></a>
+  <a href="pyproject.toml"><img src="https://img.shields.io/badge/python-3.14%2B-E4733A?labelColor=0F0E0D" alt="Python 3.14 or later"></a>
+  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-stdio%20server-E4733A?labelColor=0F0E0D" alt="MCP stdio server"></a>
+  <a href="https://github.com/menot-you/n-browser/releases"><img src="https://img.shields.io/github/v/release/menot-you/n-browser?include_prereleases&label=release&color=93AE8C&labelColor=0F0E0D" alt="Latest release"></a>
+  <a href="https://github.com/menot-you/n-browser/stargazers"><img src="https://img.shields.io/github/stars/menot-you/n-browser?color=93AE8C&labelColor=0F0E0D" alt="GitHub stars"></a>
+</p>
 
-**Bounded web evidence, zero-browser static extraction, generation-locked `SemanticView` snapshots, and SSRF-guarded browser sessions for AI agents.**
-`nBROWSER` turns live web pages and multi-provider search queries into compact, cited Markdown and interactive accessibility trees.
-It enforces hop-by-hop DNS/SSRF egress guards and AES-256-GCM origin-bound credential custody.
+**Give your AI agent the web, with citations, and keep it out of your private network.**
 
----
-
-## Why nBROWSER exists
-
-Raw HTML dumps exhaust an agent's context window.
-Ad hoc `curl` calls fail on interactive pages or follow redirects into private networks.
-Stale DOM selectors click the wrong element after navigation, and shared browser profiles leak cookies across origins.
-
-| Without nBROWSER | With nBROWSER |
-| --- | --- |
-| Raw HTML and scripts consume tens of thousands of tokens per page. | `nbrowser_page_extract` and `nbrowser_page_scrape` return clean Markdown with token estimates and source URLs. |
-| Redirects or DNS rebinding can reach `127.0.0.1`, RFC1918 LANs, or cloud metadata endpoints. | `egress_guard` resolves DNS at every hop and refuses loopback, private, link-local, and metadata addresses. |
-| Every page read starts a heavy headless browser even for static docs. | A fast static HTTP seam extracts Markdown without Chromium when JavaScript rendering is not needed. |
-| DOM mutations cause agents to click or fill stale selectors on the wrong page state. | `nbrowser_page_snapshot` binds `SemanticView` element refs to `doc_gen` and refuses stale generations. |
-| Agent login flows expose plaintext passwords in prompts or transcripts. | The AES-256-GCM vault encrypts passwords at rest and locks credential transmission to the recorded origin. |
-
----
-
-## System anatomy and network boundaries
-
-![nBROWSER network admission and compact web evidence.](docs/figures/browser-anatomy.svg)
-
-`nBROWSER` separates pure observation (the inner ring) from network and browser effects (`AuthoritySeam`) and checks every URL and redirect target through `egress_guard`.
-
-```mermaid
-flowchart LR
-    A[Agent MCP or CLI Request] --> B{Egress & DNS Guard}
-    B -->|Loopback / RFC1918 / Metadata IP| C[Typed Refusal]
-    B -->|Admitted Public HTTPS Origin| D{AuthoritySeam}
-    D -->|Static Extraction| E[Fast HTTP Seam + Markdown Converter]
-    D -->|Interactive Session| F[Isolated CloakBrowser + Origin Vault]
-    E --> G[Compact Markdown + Cited URL]
-    F --> H[doc_gen SemanticView + Captures + Logs]
-```
-
-- **Static extraction without Chromium:** `nbrowser_page_extract` and `nbrowser_web_search` operate without a browser binary installed.
-- **Explicit browser prerequisites:** interactive browser operations require the declared CloakBrowser engine (`fortress/tilion` or explicit `NOTT_NBROWSER_CHROME_BIN`), user session bus, and service-manager scope. There is no automatic system Chromium fallback.
-- **Multi-provider search merge:** optional web search queries configured providers in parallel and deduplicates results with source attribution.
-
----
-
-## Standout technical features
-
-![nBROWSER hop-by-hop SSRF guard, SemanticView, and origin-locked vault.](docs/figures/browser-security.svg)
-
-### 1. Hop-by-hop SSRF and DNS rebinding kernel (`egress_guard.py`)
-
-Standard URL validators only inspect the initial URL string and remain vulnerable to HTTP redirects or DNS rebinding onto internal hosts.
-`nBROWSER` enforces a fail-closed network kernel across both static fetches and live browser subresources:
-
-- **Per-hop DNS resolution:** resolves every hostname before opening a socket and re-evaluates every `3xx` redirect target and browser subresource request.
-- **Blocked address classes:** refuses loopback (`127.0.0.0/8`, `::1`), RFC1918 private networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local and cloud metadata endpoints (`169.254.169.254`), and unspecified addresses.
-- **Same-origin crawl frontier (`nbrowser_site_crawl`):** locks crawling to the seed's exact `(scheme, host, port)` and fetches `robots.txt` (`User-agent: *`) through the SSRF guard. It enforces a strict page budget and issues a single-use continuation cursor.
-
-### 2. Generation-locked `SemanticView` accessibility snapshots (`doc_gen`)
-
-Feeding raw DOM trees into an LLM wastes tokens and breaks when client-side routers re-render the page.
-
-```mermaid
-flowchart LR
-    A[nbrowser_page_navigate] --> B[Isolated CloakBrowser Tab: doc_gen = N]
-    B --> C[nbrowser_page_snapshot]
-    C --> D[Compact SemanticView + Element Refs @ doc_gen N]
-    D --> E{nbrowser_page_interact}
-    E -->|Page still at doc_gen N| F[Execute Click / Fill / Press]
-    E -->|Navigation advanced to doc_gen N+1| G[Fail-Closed Stale Generation Refusal]
-```
-
-- **Token-compact accessibility tree:** `nbrowser_page_snapshot` distills the live DOM into interactive roles, labels, cards, and deterministic element references.
-- **Generation counter (`doc_gen`):** every navigation or document replacement increments `doc_gen`. If an agent tries to click or fill an element reference from an older `doc_gen`, `nbrowser_page_interact` refuses the stale action instead of mutating the wrong control.
-- **Paged content and sanitized logs:** `nbrowser_content_show` streams large text artifacts with `next_offset` pagination, while `nbrowser_console_show` and `nbrowser_network_show` return sanitized metadata.
-
-### 3. AES-256-GCM credential vault and origin-locked request gate (`auth.py`)
-
-Agents should never read or type raw passwords inside prompts or tool arguments.
-
-- **Stdin-only ingestion and AES-256-GCM storage:** `nbrowser credential add NAME --url URL --username USER` reads the secret from stdin. It encrypts the secret with AES-256-GCM inside `nbrowser.sqlite3` (paired with `nbrowser.key` in the account-owned database directory).
-- **Origin-bound request gate:** during an authenticated session, the request interceptor binds password transmission strictly to the recorded origin. It blocks credential exfiltration to any third-party host for the rest of the session.
-
-### 4. Zero-browser static seam and multi-provider search merge
-
-- **Millisecond static Markdown extraction:** `nbrowser_page_extract` (`mode: static`) fetches admitted documentation pages over HTTP and converts them to clean Markdown with token counts—no browser process required.
-- **Parallel search merge (`nbrowser_web_search`):** queries configured keyed providers (`TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `ZAI_API_KEY`, `MINIMAX_API_KEY`), normalizes snippets, and deduplicates URLs with provider provenance.
-
----
-
-## Quickstart in 60 seconds
-
-### 1. Install from source
-
-Use an approved source checkout or archive. Run from its repository root:
+## Install
 
 ```bash
-uv sync --group dev
-uv run nbrowser --help
+curl --proto '=https' --tlsv1.2 -fsSL https://no.tt/install.sh | sh
 ```
 
-Use the pinned Python version and root lockfile.
-The [installation guide](docs/INSTALLATION.md) explains prerequisites and client registration.
-Source installation does not register an MCP server or supply a native account.
+Or install from source. You need Git and [uv](https://docs.astral.sh/uv/). uv installs the pinned Python (3.14):
 
-### 2. Extract your first cited page
+```bash
+git clone https://github.com/menot-you/n-browser
+cd n-browser
+uv sync --group dev
+uv run nbrowser --help
+claude mcp add nbrowser -- uv run --directory "$PWD" nbrowser mcp serve
+```
 
-Extract one admitted URL into compact Markdown without starting Chromium:
+Any MCP client that speaks stdio registers the same `nbrowser mcp serve` command.
+Static reads and web search need no browser.
+Interactive sessions need the CloakBrowser engine. The [runbook](docs/RUNBOOK.md) tells you how to set it up.
+
+## How it works
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1B1916", "primaryTextColor": "#ECE7DE", "primaryBorderColor": "#E4733A", "lineColor": "#E4733A", "secondaryColor": "#151311", "tertiaryColor": "#0F0E0D", "fontFamily": "IBM Plex Mono, monospace"}}}%%
+flowchart LR
+  agent["Your agent<br/>(any MCP client)"] -->|"stdio, 14 tools"| server["nbrowser mcp serve"]
+  server --> guard{"Network guard<br/>every hop, every DNS answer"}
+  guard -->|"refused"| deny["Private, link-local<br/>and metadata addresses"]
+  guard -->|"static read"| http["Plain HTTP"]
+  guard -->|"live session"| browser["Browser engine"]
+  http --> out["Markdown, source URL<br/>and token count"]
+  browser --> snap["Accessibility snapshot<br/>with page generation"]
+  server --> vault[("Credential vault<br/>AES-256-GCM, SQLite")]
+```
+
+Loopback (`localhost`, `127.0.0.1`) is allowed, so fence the local services that you do not want it to read.
+
+## By the numbers
+
+<p align="center">
+  <img src="docs/figures/chart-tools.svg" width="49%" alt="MCP tools per server: nMEMORY 27, nSPAWN 15, nBROWSER 14, nAPPLE 10.">
+  <img src="docs/figures/chart-tests.svg" width="49%" alt="Tests per component: nSPAWN 4335, nMEMORY 2339, nBROWSER 731, nAPPLE 106.">
+</p>
+
+Counted on 2026-10-21. Tools: the MCP `tools/list` request to `nbrowser mcp serve`.
+Tests: `uv run --group dev pytest --collect-only -q` in each member root.
+
+## Why
+
+| Before | With nBROWSER |
+| --- | --- |
+| A raw HTML page costs your agent tens of thousands of tokens. | The agent gets compact Markdown with a token estimate and the source URL. |
+| A redirect or a DNS rebind sends a request to `10.0.0.0/8` or `169.254.169.254`. | nBROWSER resolves and checks every hop. It refuses private, link-local and metadata addresses. It allows loopback. |
+| Every page read starts a headless browser. | nBROWSER reads static pages over plain HTTP. Chromium starts only for a live browser session. |
+| The page changes, and the agent clicks a stale selector on the wrong page. | Element references carry a page generation. nBROWSER refuses an action on an old generation. |
+| The agent types a password that stays in the transcript. | The vault encrypts passwords at rest (AES-256-GCM) and sends each one only to its own origin. |
+
+## Quick start
+
+Read one page into Markdown, with no browser:
 
 ```json
 {
   "tool": "nbrowser_page_extract",
-  "arguments": {
-    "urls": ["https://example.com"],
-    "mode": "static"
-  }
+  "arguments": { "urls": ["https://example.com"], "mode": "static" }
 }
 ```
 
-Or run a single-call live scrape through the MCP surface:
+Search the web, then crawl one documentation site inside a page budget:
 
 ```json
-{
-  "tool": "nbrowser_page_scrape",
-  "arguments": {
-    "host_url": "https://example.com",
-    "format": "markdown"
-  }
-}
+{ "tool": "nbrowser_web_search", "arguments": { "query": "uv workspace lockfile" } }
+{ "tool": "nbrowser_site_crawl", "arguments": { "host_url": "https://docs.astral.sh/uv/", "max_pages": 20 } }
 ```
 
-Follow the [runbook](docs/RUNBOOK.md) for setup, CloakBrowser prerequisites, vault backup, and restoration.
-
----
-
-## Capability overview
-
-`nBROWSER` declares **37 MCP tools** (**14 with an active handler** in the current release and 23 reserved surfaces documented in the reference):
-
-| Area | Active MCP tools | What it solves |
-| --- | --- | --- |
-| **One-call evidence extraction** | `nbrowser_page_extract`, `nbrowser_page_scrape`, `nbrowser_site_crawl`, `nbrowser_web_search` | Convert URLs into clean Markdown, crawl same-origin documentation within a page budget, or search the web. |
-| **Interactive browser sessions** | `nbrowser_page_navigate`, `nbrowser_page_snapshot`, `nbrowser_page_interact`, `nbrowser_page_capture` | Navigate an isolated tab, read its `doc_gen`-bound `SemanticView`, click/fill elements, and capture screenshots. |
-| **Diagnostics and inspection** | `nbrowser_content_show`, `nbrowser_console_show`, `nbrowser_network_show`, `nbrowser_session_show`, `nbrowser_tab_list` | Inspect paged DOM text, console messages, network requests, active session health, and open tabs. |
-| **Origin-bound authentication** | `nbrowser_token_extract` | Extract session tokens from an authenticated origin under local AES-256-GCM vault custody. |
-
----
-
-## Test and check locally
-
-Run the surface contract and egress guard tests without starting a browser window:
+From the shell, with a browser engine installed:
 
 ```bash
-TMPDIR=/var/tmp uv run --group dev pytest tests/test_docs_surface_counts.py -q
-uv run ruff check .
-uv run mypy --strict nbrowser
+uv run nbrowser page scrape https://example.com --format markdown
+uv run nbrowser page snapshot https://example.com
 ```
 
----
+## What you get
 
-## Try it, give feedback, and contribute
+| Area | Tools |
+| --- | --- |
+| Cited reads | `nbrowser_page_extract`, `nbrowser_page_scrape`, `nbrowser_site_crawl`, `nbrowser_web_search` |
+| Browser sessions | `nbrowser_page_navigate`, `nbrowser_page_snapshot`, `nbrowser_page_interact`, `nbrowser_page_capture` |
+| Inspection | `nbrowser_content_show`, `nbrowser_console_show`, `nbrowser_network_show`, `nbrowser_session_show`, `nbrowser_tab_list` |
+| Logins | `nbrowser_token_extract`, and the `nbrowser credential` CLI with stdin-only secrets |
 
-We built `nBROWSER` for agent workflows that need reproducible, token-efficient web evidence with strict local network security.
+The [reference](docs/REFERENCE.md) lists every tool and its parameters.
 
-- **Try it on your workflow:** connect `nbrowser` to Claude Code or Codex and extract documentation with `nbrowser_page_extract`. Compare token usage against raw HTML fetches.
-- **Share feedback and bug reports:** open an issue if a documentation site renders poorly in Markdown or hits an egress edge case. Include the target URL and observed output.
-- **Send a first contribution:** check the [documentation index](docs/README.md) for a concrete first task. Read [CLAUDE.md](https://github.com/menot-you/n-browser/blob/main/CLAUDE.md), set up your environment with [setup](https://github.com/menot-you/n-browser/blob/main/docs/SETUP.md), and run the checks in [quality](https://github.com/menot-you/n-browser/blob/main/docs/QUALITY.md).
+- **Against `curl` or a plain HTTP client:** nBROWSER checks each redirect target and each DNS answer, not only the first URL.
+  The crawl stays on the seed's scheme, host and port and obeys `robots.txt`.
+- **Against a raw headless browser:** the agent reads an accessibility snapshot, not the DOM.
+  Element references expire when the page changes.
 
-## Read and contribute
+## The NOTT family
+
+<table>
+<tr>
+<td align="center" width="20%"><a href="https://github.com/menot-you/n-memory"><img src="docs/figures/mark-nmemory.svg" width="160" alt="n-memory"></a><br><sub>Memory that cites its source.</sub></td>
+<td align="center" width="20%"><a href="https://github.com/menot-you/n-spawn"><img src="docs/figures/mark-nspawn.svg" width="160" alt="n-spawn"></a><br><sub>Tracked, resumable agent workers.</sub></td>
+<td align="center" width="20%"><a href="https://github.com/menot-you/n-browser"><img src="docs/figures/mark-nbrowser.svg" width="160" alt="n-browser"></a><br><sub>The live web as cited evidence.</sub></td>
+<td align="center" width="20%"><a href="https://github.com/menot-you/n-apple"><img src="docs/figures/mark-napple.svg" width="160" alt="n-apple"></a><br><sub>App Store Connect for agents.</sub></td>
+<td align="center" width="20%"><a href="https://github.com/menot-you/plugin"><img src="docs/figures/mark-plugin.svg" width="160" alt="plugin"></a><br><sub>The team contract, routes and hooks.</sub></td>
+</tr>
+</table>
+
+## For AI agents
+
+This section is for a language model that reads this repository.
+
+- **What it is.** nBROWSER is an MCP server and CLI that reads live web pages
+  and search results for an agent. It returns Markdown with the source URL and
+  a token count, and it drives a browser session when a page needs one.
+- **What it is not.** It is not a general HTTP client and not a proxy into a
+  private network. It refuses private, link-local and cloud metadata addresses.
+  It allows loopback, so it is not a fence for local services.
+- **Entry points.** The CLI is `nbrowser <noun> <verb>` (`nbrowser --help`).
+  The MCP server is `nbrowser mcp serve` (stdio). All 14 tool names start with
+  `nbrowser_`. Start with `nbrowser_page_extract` for a known URL and
+  `nbrowser_web_search` when you do not have the URL.
+- **Configuration.** `NOTT_NBROWSER_CHROME_BIN` names the browser binary for
+  live sessions. The store directory, with the credential vault, is
+  `~/.nott/state/database/`, or `NOTT_DATABASE_DIR` when a test sets it.
+- **Invariants.** Each hop and each DNS answer goes through the network guard.
+  An action on an old page generation is refused. A password goes only to its
+  own origin. Cite the URL of each page read.
+- **Full reference.** [docs/REFERENCE.md](docs/REFERENCE.md) lists every tool
+  and command. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) holds the guard and
+  vault detail. [llms.txt](https://github.com/menot-you/n-browser/blob/main/llms.txt) holds the same facts in the llms.txt format.
+
+## Learn more
 
 | Need | Page |
 | --- | --- |
-| Agent and contributor contract | [CLAUDE.md](https://github.com/menot-you/n-browser/blob/main/CLAUDE.md) |
-| Contributor development setup | [Setup](https://github.com/menot-you/n-browser/blob/main/docs/SETUP.md) |
-| Checks and security review | [Quality](https://github.com/menot-you/n-browser/blob/main/docs/QUALITY.md) |
-| Documentation index and a concrete first contribution | [Docs](docs/README.md) |
-| Setup, operation, backup, and restoration | [Runbook](docs/RUNBOOK.md) |
-| Services and trust boundaries | [Architecture](docs/ARCHITECTURE.md) |
-| Complete MCP and CLI inventory | [Reference](docs/REFERENCE.md) |
+| How it works: network guard, snapshots, vault, full behavior detail | [Architecture](docs/ARCHITECTURE.md) |
+| Every MCP tool and CLI command | [Reference](docs/REFERENCE.md) |
+| Setup, operation, backup and restore | [Runbook](docs/RUNBOOK.md) |
+| Development setup and checks | [Setup](docs/SETUP.md), [Quality](docs/QUALITY.md) |
+| Documentation index and a first contribution | [Docs](docs/README.md) |
 | Installation | [Installation](docs/INSTALLATION.md) |
 | Processing choices | [Privacy](docs/PRIVACY.md) |
 | Existing data | [Upgrade](docs/UPGRADE.md) |
 | Failure diagnosis | [Troubleshooting](docs/TROUBLESHOOTING.md) |
 | Direction | [Roadmap](docs/ROADMAP.md) |
-| Changes | [Changelog](CHANGELOG.md) |
 
-Read [contributing](CONTRIBUTING.md), [conduct](CODE_OF_CONDUCT.md), and [support](SUPPORT.md).
-Report sensitive issues through [security](SECURITY.md).
-See [license](LICENSE) and [citation](CITATION.cff).
+## Contribute
 
-## Behavior details
+Try it on your own agent workflow and compare the token count with raw HTML.
+Open an issue when a site converts badly or when the network guard is wrong. Include the URL and the output.
+Read [contributing](CONTRIBUTING.md) and [conduct](CODE_OF_CONDUCT.md).
+Report security issues through [security](SECURITY.md).
 
-`nbrowser_page_interact` takes flat parameters: required `verb`, optional `selector`, `ref`, `text`, `value`, `key`, `x`, `y`, `human`, and `seed`. It dispatches eleven verbs: click, hover, scroll, focus, type, fill_form, clear, select, press_key, submit, and `auth_login`. A click or submit whose resolved action URL leaves the page's origin for a private or loopback target refuses `grant_required`. `back`, `refresh` and `dialog` refuse with `grant_required`. `drag` refuses with `invalid_input`. An interaction that takes no effect refuses `invalid_input`.
-
-A capture is never staged: the capture bytes never enter the content resolver, and
-`nbrowser_content_show` refuses a `capture:<sha256>` ref with `content_unavailable`.
-No path stages a `download:` kind: the staging helpers pass `text` or `binary` only.
-A `download:<sha256>` ref is therefore never in custody, and `nbrowser_content_show`
-answers it with `content_unavailable`. A staged artifact keeps its producer kind, so
-identical bytes cannot relabel or consume another kind's artifact.
-The capture's `sha256` field and signed source still identify the original bytes.
-
-The egress guard admits HTTP and HTTPS URLs for public hosts or explicit loopback hosts, such as `localhost` and `127.0.0.1`.
-It refuses private, link-local, CGNAT, multicast, reserved, and suspicious destinations.
-The connection gate resolves each destination once and checks every DNS answer before it opens a socket.
-A mixed answer refuses the connection. A hostname that resolves to loopback requires an explicit loopback host.
-The socket connects to the checked numeric address. HTTPS keeps the original hostname for TLS checks.
-Each explicit navigation also checks current DNS answers before the browser can reuse a connection.
-Host downloads ignore environment proxies and refuse redirects.
-Chromium uses a session-owned SOCKS5 proxy with the same connection gate, including for new targets and subresources.
-Chromium settings disable loopback bypass, local DNS, QUIC, and WebRTC UDP without a proxy.
-The CDP request gate also checks redirect hops and public-to-loopback transitions.
-New targets stay paused until CDP installs their request gate and containment script.
-The gate keeps the initiating origin for popups and child frames. A failed gate installation closes the target.
-Frame identifiers retain the origin when Chromium moves a frame to another target.
-Explicit navigation permits only its first main-document request. Redirects and unrelated requests retain their origin checks.
-Extraction admits the complete URL batch before any download or browser effect.
-Page evaluation exceptions return an engine failure and preserve the last valid snapshot.
-
-Static extraction accepts `html_only: true` for page widgets. It accepts HTML and XHTML.
-It refuses other content types and skips document fallbacks. The default stays unchanged.
+Licensed under [AGPL-3.0](LICENSE).

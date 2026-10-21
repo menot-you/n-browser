@@ -1,0 +1,21 @@
+# nBROWSER
+
+> MCP server and CLI that reads live web pages and search results for an agent. It returns Markdown with the source URL and a token count, and it drives a browser session when a page needs one. Part of the NOTT family.
+
+- It is not a general HTTP client or a proxy into a private network. It refuses private, link-local and cloud metadata addresses. It allows loopback (`localhost`, `127.0.0.1`).
+- CLI: `nbrowser <noun> <verb>` (`nbrowser --help`).
+- MCP server: `nbrowser mcp serve` (stdio). 14 tools, all named `nbrowser_*`. Use `nbrowser_page_extract` for a known URL and `nbrowser_web_search` when you do not have the URL.
+- Configuration: `NOTT_NBROWSER_CHROME_BIN` names the browser binary for live sessions. Static reads and web search need no browser. Store directory, with the credential vault: `~/.nott/state/database/`, or `NOTT_DATABASE_DIR` in tests.
+- Invariants: each hop and each DNS answer goes through the network guard. An action on an old page generation is refused. The vault encrypts passwords with AES-256-GCM and sends each one only to its own origin. Cite the URL of each page read.
+- Install: `curl --proto '=https' --tlsv1.2 -fsSL https://no.tt/install.sh | sh`, or `uv sync --group dev` in a clone.
+
+## Docs
+
+- [README](README.md): overview, install and quick start
+- [Reference](docs/REFERENCE.md): every CLI command and MCP tool
+- [Architecture](docs/ARCHITECTURE.md): network guard, snapshots, vault
+- [Runbook](docs/RUNBOOK.md): setup, operation, backup and restore
+
+## Optional
+
+- [NOTT plugin](https://github.com/menot-you/plugin): the plugin that uses nMEMORY, nSPAWN and nBROWSER
