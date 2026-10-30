@@ -116,8 +116,8 @@ def canonical_state_bytes(state: dict[str, Any]) -> bytes:
 class Frontier:
     """Same-origin BFS over normalized absolute URLs. `allowed` is the robots
     verdict the driver injects (judged with UA `*`). `state()` and
-    `from_state()` round-trip through canonical JSON — the cursor is a
-    ContentRef over the digest of those bytes (crawl.py)."""
+    `from_state()` round-trip through canonical JSON — the cursor is the
+    digest of those bytes (crawl.py)."""
 
     def __init__(
         self,

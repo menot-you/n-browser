@@ -30,7 +30,7 @@ If the launcher reports a missing bus or engine, resolve that prerequisite befor
 Static URL extraction can use `mode: static` without Chromium.
 The MCP session still checks the URL through the network boundary.
 The [provider declarations](../nbrowser/providers/merge.py) name optional search variables:
-`ZAI_API_KEY`, `MINIMAX_API_KEY`, `TAVILY_API_KEY`, and `FIRECRAWL_API_KEY`.
+`TAVILY_API_KEY` and `FIRECRAWL_API_KEY`.
 Every configured keyed provider can receive the query.
 Keep keys in the process environment. Do not place values in commands or reports.
 Read [privacy](PRIVACY.md) before enabling a provider.

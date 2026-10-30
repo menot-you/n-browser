@@ -7,7 +7,7 @@ import sys
 import pytest
 from test_door import drive_door
 
-from nbrowser.providers import firecrawl, minimax, tavily, zai
+from nbrowser.providers import firecrawl, tavily
 from nbrowser.providers.base import (
     HttpResponse,
     ProviderKey,
@@ -56,12 +56,12 @@ def test_snippet_clamp_appends_ellipsis_at_byte_boundary() -> None:
 
 
 def test_merge_dedupes_by_url_and_tracks_providers() -> None:
-    z = [hit("https://x.com/a", "Z a")]
-    m = [hit("https://x.com/a", "M a")]
-    out = merge_search([z, m], ["zai", "minimax"], 10)
+    t = [hit("https://x.com/a", "T a")]
+    f = [hit("https://x.com/a", "F a")]
+    out = merge_search([t, f], ["tavily", "firecrawl"], 10)
     assert len(out) == 1
-    assert out[0].providers == ["zai", "minimax"]
-    assert out[0].title == "Z a"
+    assert out[0].providers == ["tavily", "firecrawl"]
+    assert out[0].title == "T a"
 
 
 def test_merge_enforces_max_hits_cap_and_interleaves() -> None:
@@ -121,16 +121,11 @@ def test_parsers_pin_semantics() -> None:
 
 
 def test_fan_out_without_keys_reports_skipped_lanes() -> None:
-    for env in (
-        "ZAI_API_KEY",
-        "MINIMAX_API_KEY",
-        "TAVILY_API_KEY",
-        "FIRECRAWL_API_KEY",
-    ):
+    for env in ("TAVILY_API_KEY", "FIRECRAWL_API_KEY"):
         os.environ.pop(env, None)
     hits, lanes = fan_out_search("anything", 5)
     assert hits == []
-    assert len(lanes) == 4
+    assert len(lanes) == 2
     assert all(l.status == "skipped_no_key" for l in lanes)
 
 
@@ -173,15 +168,15 @@ def test_door_search_refusals() -> None:
     )
     responses = drive_door(
         lines.split("\n"),
-        drop=("ZAI_API_KEY", "MINIMAX_API_KEY", "TAVILY_API_KEY", "FIRECRAWL_API_KEY"),
+        drop=("TAVILY_API_KEY", "FIRECRAWL_API_KEY"),
     )
 
-    # search without keys: valid response, 4 skipped lanes, zero hits.
+    # search without keys: valid response, 2 skipped lanes, zero hits.
     result = responses[2]["result"]
     assert result.get("isError") is not True
     payload = json.loads(result["content"][0]["text"])
     assert payload["hits"] == []
-    assert len(payload["lanes"]) == 4
+    assert len(payload["lanes"]) == 2
     assert all(l["status"] == "skipped_no_key" for l in payload["lanes"])
 
     # search without a query: typed refusal.
@@ -221,7 +216,7 @@ def test_door_search_null_max_results_uses_the_default() -> None:
     )
     responses = drive_door(
         lines.split("\n"),
-        drop=("ZAI_API_KEY", "MINIMAX_API_KEY", "TAVILY_API_KEY", "FIRECRAWL_API_KEY"),
+        drop=("TAVILY_API_KEY", "FIRECRAWL_API_KEY"),
     )
 
     # An advertised default must not answer as an untyped internal error.
@@ -229,7 +224,7 @@ def test_door_search_null_max_results_uses_the_default() -> None:
     assert result.get("isError") is not True
     payload = json.loads(result["content"][0]["text"])
     assert payload["hits"] == []
-    assert len(payload["lanes"]) == 4
+    assert len(payload["lanes"]) == 2
     assert all(l["status"] == "skipped_no_key" for l in payload["lanes"])
 
 
@@ -237,14 +232,6 @@ def test_parsers_refuse_non_string_snippet() -> None:
     with pytest.raises(ProviderTransportError):
         tavily.parse_tavily_hits(
             '{"results":[{"url":"https://e.com/a","content":{"nested":1}}]}'
-        )
-    with pytest.raises(ProviderTransportError):
-        zai.parse_search_prime_hits(
-            '{"results":[{"url":"https://e.com/a","snippet":{"nested":1}}]}'
-        )
-    with pytest.raises(ProviderTransportError):
-        minimax.parse_minimax_hits(
-            '{"data":[{"link":"https://e.com/a","content":{"nested":1}}]}', 10
         )
     with pytest.raises(ProviderTransportError):
         firecrawl.parse_firecrawl_hits(
@@ -255,12 +242,6 @@ def test_parsers_refuse_non_string_snippet() -> None:
 def test_parsers_refuse_non_string_title() -> None:
     with pytest.raises(ProviderTransportError):
         tavily.parse_tavily_hits('{"results":[{"url":"https://e.com/a","title":5}]}')
-    with pytest.raises(ProviderTransportError):
-        zai.parse_search_prime_hits('{"results":[{"url":"https://e.com/a","title":5}]}')
-    with pytest.raises(ProviderTransportError):
-        minimax.parse_minimax_hits(
-            '{"data":[{"link":"https://e.com/a","title":5}]}', 10
-        )
     with pytest.raises(ProviderTransportError):
         firecrawl.parse_firecrawl_hits('{"data":[{"url":"https://e.com/a","title":5}]}')
 
@@ -282,14 +263,6 @@ def test_parsers_refuse_a_falsy_non_string_snippet() -> None:
     # A falsy non-string snippet ([]) must not fall through the `or` default to
     # an ok lane with no snippet; it errors the lane, as tavily already does.
     with pytest.raises(ProviderTransportError):
-        zai.parse_search_prime_hits(
-            '{"results":[{"url":"https://e.com/a","snippet":[]}]}'
-        )
-    with pytest.raises(ProviderTransportError):
-        minimax.parse_minimax_hits(
-            '{"data":[{"link":"https://e.com/a","snippet":[]}]}', 10
-        )
-    with pytest.raises(ProviderTransportError):
         firecrawl.parse_firecrawl_hits(
             '{"data":[{"url":"https://e.com/a","description":[]}]}'
         )
@@ -299,9 +272,7 @@ def test_fan_out_records_poisoned_lane_as_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("TAVILY_API_KEY", "t" * 12)
-    monkeypatch.setenv("MINIMAX_API_KEY", "m" * 12)
-    monkeypatch.delenv("ZAI_API_KEY", raising=False)
-    monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "f" * 12)
     monkeypatch.setattr(
         tavily,
         "bearer_post",
@@ -310,17 +281,14 @@ def test_fan_out_records_poisoned_lane_as_error(
         ),
     )
     monkeypatch.setattr(
-        minimax,
+        firecrawl,
         "bearer_post",
         lambda *args, **kwargs: HttpResponse(
-            200, '{"data":[{"link":"https://e.com/b","title":"B","snippet":"good"}]}'
+            200, '{"data":[{"url":"https://e.com/b","title":"B","description":"good"}]}'
         ),
     )
 
     hits, lanes = fan_out_search("query", 10)
     status = {lane.provider: lane.status for lane in lanes}
-    assert status["tavily"] == "error"
-    assert status["minimax"] == "ok"
-    assert status["zai"] == "skipped_no_key"
-    assert status["firecrawl"] == "skipped_no_key"
+    assert status == {"tavily": "error", "firecrawl": "ok"}
     assert [hit.url for hit in hits] == ["https://e.com/b"]

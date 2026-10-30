@@ -15,11 +15,6 @@ class FixtureContentResolver:
             self.store[digest] = data
             self.kinds[digest] = kind
 
-    def holds(self, digest: str) -> bool:
-        """Whether the bytes are still in custody: resolve_once pops them."""
-        with self.lock:
-            return digest in self.store
-
     def resolve_once(self, digest: str) -> bytes:
         with self.lock:
             if digest not in self.store:

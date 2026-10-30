@@ -190,10 +190,12 @@ def test_capture_frame_bounds_and_wire() -> None:
         device_pixel_ratio=MAX_CAPTURE_FRAME_DEVICE_PIXEL_RATIO,
         freshness_marker="bounded",
     )
-    assert frame_max.viewport_width_css_px == 8192
-    assert frame_max.viewport_height_css_px == 8192
-    assert frame_max.device_pixel_ratio == 3.0
-    assert frame_max.freshness_marker == "bounded"
+    assert frame_max.to_dict() == {
+        "viewport_width_css_px": 8192,
+        "viewport_height_css_px": 8192,
+        "device_pixel_ratio": 3.0,
+        "freshness_marker": "bounded",
+    }
 
     frame_min = CaptureFrame(
         viewport_width_css_px=1,
@@ -201,7 +203,7 @@ def test_capture_frame_bounds_and_wire() -> None:
         device_pixel_ratio=MIN_CAPTURE_FRAME_DEVICE_PIXEL_RATIO,
         freshness_marker="min",
     )
-    assert frame_min.device_pixel_ratio == 1.0
+    assert frame_min.to_dict()["device_pixel_ratio"] == 1.0
 
     # Viewport 0 refused
     with pytest.raises(EmptyViewport):
@@ -248,10 +250,12 @@ def test_origin_metadata_constructors_and_wire() -> None:
 
     # 1. Fixture
     orig_fixture = OriginMetadata("fixture", "fixture://page", None, None)
-    assert orig_fixture.kind == OriginKind.Fixture
-    assert orig_fixture.locator == "fixture://page"
-    assert orig_fixture.captured_at is None
-    assert orig_fixture.capture_frame is None
+    assert orig_fixture.to_dict() == {
+        "kind": OriginKind.Fixture.value,
+        "locator": "fixture://page",
+        "captured_at": None,
+        "capture_frame": None,
+    }
 
     # Whitespace-only locator refused
     with pytest.raises(InvalidOrigin):
@@ -261,8 +265,8 @@ def test_origin_metadata_constructors_and_wire() -> None:
     orig_file = OriginMetadata(
         "allowed_root_file", "file:///tmp/img.png", "2026-08-26T12:00:00Z", frame
     )
-    assert orig_file.kind == OriginKind.AllowedRootFile
-    assert orig_file.capture_frame == frame
+    assert orig_file.to_dict()["kind"] == OriginKind.AllowedRootFile.value
+    assert orig_file.to_dict()["capture_frame"] == frame.to_dict()
 
     with pytest.raises(MissingCaptureFrame):
         OriginMetadata("allowed_root_file", "file:///tmp/img.png", None, None)
@@ -271,15 +275,15 @@ def test_origin_metadata_constructors_and_wire() -> None:
     orig_browser = OriginMetadata.browser_capture(
         "https://example.com", "2026-08-26T12:00:00Z", frame
     )
-    assert orig_browser.kind == OriginKind.BrowserCapture
-    assert orig_browser.capture_frame == frame
+    assert orig_browser.to_dict()["kind"] == OriginKind.BrowserCapture.value
+    assert orig_browser.to_dict()["capture_frame"] == frame.to_dict()
 
     with pytest.raises(MissingCaptureFrame):
         OriginMetadata.browser_capture("https://example.com", None, None)
 
     # 4. DerivedContent
     orig_derived = OriginMetadata.derived_content("fixture://derived", None, None)
-    assert orig_derived.kind == OriginKind.DerivedContent
+    assert orig_derived.to_dict()["kind"] == OriginKind.DerivedContent.value
 
     # Serialization order and null encoding
     dict_repr = orig_fixture.to_dict()
@@ -331,11 +335,6 @@ def test_enum_code_fallthrough_refuses_unknown_members() -> None:
         TaintClass.code("unknown")  # type: ignore[arg-type]
     with pytest.raises(ValueError):
         RetentionPolicy.code("unknown")  # type: ignore[arg-type]
-
-
-def test_capture_frame_refuses_non_integer_axis() -> None:
-    with pytest.raises(EmptyViewport):
-        CaptureFrame(1.0, 1, 1.0, "frame")  # type: ignore[arg-type]
 
 
 def test_capture_frame_from_dict_refuses_non_object_payload() -> None:

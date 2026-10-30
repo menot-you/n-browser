@@ -20,10 +20,8 @@ PROVIDER_BODY_CAP = 4 * 1024 * 1024
 KEY_MIN = 8
 KEY_MAX = 4096
 
-# Exactly four approved provider hosts (d81-provider-web-intelligence-lanes).
+# Exactly two approved provider hosts.
 APPROVED_HOSTS = (
-    "api.z.ai",
-    "api.minimax.io",
     "api.tavily.com",
     "api.firecrawl.dev",
 )

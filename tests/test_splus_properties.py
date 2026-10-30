@@ -35,7 +35,7 @@ def test_capture_bytes_have_exactly_one_concurrent_consumer(body: bytes) -> None
         results = list(pool.map(lambda _: consume(), range(2)))
     assert results.count(body) == 1
     assert results.count(FailureCode.CONTENT_UNAVAILABLE) == 1
-    assert not resolver.holds("capture:test")
+    assert "capture:test" not in resolver.store
     assert resolver.store == resolver.kinds == {}
 
 
@@ -59,10 +59,10 @@ def test_text_paging_preserves_unicode_and_consumes_only_the_final_page(
         assert fragment == text[offset : offset + page_size]
         fragments.append(fragment)
         if next_offset is None:
-            assert not resolver.holds("artifact:test")
+            assert "artifact:test" not in resolver.store
             break
         assert next_offset == offset + page_size
-        assert resolver.holds("artifact:test")
+        assert "artifact:test" in resolver.store
         offset = next_offset
     assert "".join(fragments) == text
     with pytest.raises(BrowserError) as refused:

@@ -493,7 +493,7 @@ class CdpPipeClient:
         )
 
     def _record_navigation_reply(
-        self, session_id: str | None, frame_id: str | None, requested_url: str
+        self, session_id: str | None, frame_id: str | None
     ) -> None:
         with self.lock:
             if frame_id:
@@ -812,7 +812,6 @@ class CdpPipeClient:
             self._record_navigation_reply(
                 session_id,
                 str(result["frameId"]) if result.get("frameId") else None,
-                str(params["url"]),
             )
         return result
 

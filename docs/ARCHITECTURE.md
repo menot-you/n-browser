@@ -132,7 +132,7 @@ Agents should never read or type raw passwords inside prompts or tool arguments.
 #### 4. Zero-browser static seam and multi-provider search merge
 
 - **Millisecond static Markdown extraction:** `nbrowser_page_extract` (`mode: static`) fetches admitted documentation pages over HTTP and converts them to clean Markdown with token counts—no browser process required.
-- **Parallel search merge (`nbrowser_web_search`):** queries configured keyed providers (`TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `ZAI_API_KEY`, `MINIMAX_API_KEY`), normalizes snippets, and deduplicates URLs with provider provenance.
+- **Parallel search merge (`nbrowser_web_search`):** queries configured keyed providers (`TAVILY_API_KEY`, `FIRECRAWL_API_KEY`), normalizes snippets, and deduplicates URLs with provider provenance.
 
 ---
 
@@ -246,7 +246,7 @@ No path stages a `download:` kind: the staging helpers pass `text` or `binary` o
 A `download:<sha256>` ref is therefore never in custody, and `nbrowser_content_show`
 answers it with `content_unavailable`. A staged artifact keeps its producer kind, so
 identical bytes cannot relabel or consume another kind's artifact.
-The capture's `sha256` field and signed source still identify the original bytes.
+The capture's `sha256` field still identifies the original bytes.
 
 The egress guard admits HTTP and HTTPS URLs for public hosts or explicit loopback hosts, such as `localhost` and `127.0.0.1`.
 It refuses private, link-local, CGNAT, multicast, reserved, and suspicious destinations.

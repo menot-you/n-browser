@@ -2,13 +2,11 @@
 
 - nbrowser_page_extract: the text path over the latest snapshot (urls[] is A5)
 - nbrowser_site_crawl: one isolated context, same-origin BFS, off-origin recorded,
-  cursor minted and resumed through the capture authority — on the double
-- the Campaign B refusals are gone: CAMPAIGN_B_TOOLS is empty and stays a symbol
+  cursor minted and resumed in the process custody — on the double
 """
 
 from __future__ import annotations
 
-import base64
 import http.server
 import json
 import threading
@@ -16,12 +14,11 @@ from typing import Any
 
 import pytest
 from cdp_double import CdpDouble, FakePage
-from nott_spine import ReceiptRung, TaintClass
 
 from nbrowser import crawl as cr
 from nbrowser.errors import BrowserError, FailureCode, InputFailure
 from nbrowser.extract import BROWSER_SCRAPE, MARKDOWN_WALKER, SnapshotEvidence
-from nbrowser.mcp_server import CAMPAIGN_B_TOOLS, McpServer
+from nbrowser.mcp_server import McpServer
 from nbrowser.sanitize import redact_url_keep_path
 from nbrowser.semantic import SemanticView
 from nbrowser.session import BrowserLaunchConfig, BrowserSession
@@ -115,9 +112,6 @@ def _seed(server: McpServer, view: SemanticView) -> None:
     server.last_snapshot = SnapshotEvidence(
         view=view,
         digest="snap",
-        taint=TaintClass.PageDerived,
-        rung=ReceiptRung.UnwitnessedLocal,
-        instruction_policy="redact",
     )
 
 
@@ -153,13 +147,11 @@ def test_nbrowser_extract_filters_the_latest_snapshot() -> None:
     assert double.sent == []
 
 
-def test_campaign_b_tools_is_empty_and_stays_a_symbol() -> None:
-    assert CAMPAIGN_B_TOOLS == frozenset()
+def test_crawl_without_host_url_or_cursor_is_refused() -> None:
     server, _ = _crawl_server({})
-    for tool in ("nbrowser_site_crawl",):
-        with pytest.raises(BrowserError) as exc:
-            server.handle_tool_call(tool, {})
-        assert exc.value.code == InputFailure.OPERATION
+    with pytest.raises(BrowserError) as exc:
+        server.handle_tool_call("nbrowser_site_crawl", {})
+    assert exc.value.code == InputFailure.OPERATION
 
 
 def test_crawl_walks_three_linked_pages_in_one_isolated_context_and_disposes() -> None:
@@ -220,13 +212,10 @@ def test_crawl_cursor_resumes_once_and_content_get_never_resolves_it() -> None:
     assert [p["url"] for p in first["pages"]] == [SEED, SEED + "a"]
     assert first["stop_reason"] == "max_pages"
     cursor = first["cursor"]
-    assert isinstance(cursor, str) and len(cursor) < cr.CURSOR_WIRE_CAP
-    digest = json.loads(base64.urlsafe_b64decode(cursor))["digest"].removeprefix(
-        "sha256:"
-    )
-    assert server.cursor_digests == [digest]
+    assert isinstance(cursor, str)
+    assert server.cursor_digests == [cursor]
     with pytest.raises(BrowserError) as exc:
-        server.handle_tool_call("nbrowser_content_show", {"ref": digest})
+        server.handle_tool_call("nbrowser_content_show", {"ref": cursor})
     assert exc.value.code == InputFailure.CONTENT_REF
     with pytest.raises(BrowserError) as exc:
         server.handle_tool_call(
@@ -265,7 +254,7 @@ def test_consumed_cursor_stays_consumed_after_identical_new_crawl() -> None:
     assert [page["url"] for page in resumed["pages"]] == [SEED + "next"]
 
 
-def test_cursor_minted_by_another_process_and_malformed_wires_are_refused() -> None:
+def test_cursor_of_another_process_and_malformed_wires_are_refused() -> None:
     a, _ = _crawl_server(THREE)
     b, _ = _crawl_server(THREE)
     cursor = a.handle_tool_call(
@@ -273,19 +262,17 @@ def test_cursor_minted_by_another_process_and_malformed_wires_are_refused() -> N
     )["cursor"]
     with pytest.raises(BrowserError) as exc:
         b.handle_tool_call("nbrowser_site_crawl", {"cursor": cursor})
-    assert exc.value.code == InputFailure.CONTENT_REF
-    assert exc.value.message == "cursor minted by another process"
-    wire = json.loads(base64.urlsafe_b64decode(cursor))
-    forged = dict(wire, binding="0" * 64)
-    forged_cursor = base64.urlsafe_b64encode(json.dumps(forged).encode()).decode()
-    with pytest.raises(BrowserError) as exc:
-        a.handle_tool_call("nbrowser_site_crawl", {"cursor": forged_cursor})
-    assert exc.value.code == InputFailure.CONTENT_REF
-    for bad in ("x" * (cr.CURSOR_WIRE_CAP + 1), "not-base64!", "", 7, "aGk=", "W10="):
+    assert exc.value.code == FailureCode.CONTENT_UNAVAILABLE
+    assert exc.value.message == "cursor already resumed or unknown"
+    for bad in ("", 7):
         with pytest.raises(BrowserError) as exc:
             a.handle_tool_call("nbrowser_site_crawl", {"cursor": bad})
         assert exc.value.code == InputFailure.CONTENT_REF
-    assert a.cursor_digests != []
+    for unknown in ("x" * 4096, "not-a-cursor", "0" * 64):
+        with pytest.raises(BrowserError) as exc:
+            a.handle_tool_call("nbrowser_site_crawl", {"cursor": unknown})
+        assert exc.value.code == FailureCode.CONTENT_UNAVAILABLE
+    assert a.cursor_digests == [cursor]
     resumed = a.handle_tool_call("nbrowser_site_crawl", {"cursor": cursor})
     assert resumed["pages"][0]["url"] == SEED + "a"
 
@@ -400,7 +387,7 @@ def test_engine_failure_mid_walk_disposes_and_restages_the_cursor() -> None:
     assert exc.value.code == ClosedFailure.PROTOCOL
     assert double.contexts == []
     assert server.cursor_digests == held
-    assert server.resolver.holds(held[0])
+    assert held[0] in server.resolver.store
 
 
 def _assert_cursor_preparation_failure(
@@ -466,21 +453,6 @@ def test_cursor_context_open_failure_after_consumption_preserves_original(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _assert_cursor_preparation_failure(monkeypatch, "nbrowser_site_crawl", "session")
-
-
-def test_cursor_wire_bound_refuses_before_decoder_is_called(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    server, _ = _crawl_server(THREE)
-
-    def forbidden_decoder(*args: Any, **kwargs: Any) -> Any:
-        raise AssertionError("oversized cursor reached decoder")
-
-    monkeypatch.setattr(cr.base64, "urlsafe_b64decode", forbidden_decoder)
-    with pytest.raises(BrowserError) as exc:
-        cr.resume_cursor(server, "x" * (cr.CURSOR_WIRE_CAP + 1), "crawl", None)
-    assert exc.value.code == InputFailure.CONTENT_REF
-    assert exc.value.message == f"cursor exceeds {cr.CURSOR_WIRE_CAP} bytes"
 
 
 def test_crawl_walk_clock_deadline_returns_partial_cursor_and_resumes(
@@ -758,34 +730,16 @@ def test_crawl_non_list_link_reply_is_an_exhausted_seed(
     assert double.contexts == []
 
 
-def test_cursor_invalid_contract_and_non_derived_ref_refuse_before_navigation() -> None:
-    from nott_spine import (
-        CaptureFrame,
-        OriginMetadata,
-        RetentionPolicy,
-        SourceCapability,
-    )
-
+def test_staged_artifact_is_not_a_cursor_and_refuses_before_navigation() -> None:
     server, double = _crawl_server({})
-    invalid = base64.urlsafe_b64encode(b"{}").decode()
+    state = {"kind": "crawl", "seed": SEED, "queue": [SEED + "z"], "seen": []}
+    staged = server._stage_artifact_bytes(json.dumps(state).encode(), "text")
     with pytest.raises(BrowserError) as exc:
-        server.handle_tool_call("nbrowser_site_crawl", {"cursor": invalid})
-    assert exc.value.code == InputFailure.CONTENT_REF
-    assert exc.value.message.startswith("cursor fields invalid:")
-    source = server.content_authority.issuer(SourceCapability.NBrowser).issue(
-        "sha256:" + "a" * 64,
-        OriginMetadata.browser_capture(
-            "fixture://cursor-test", None, CaptureFrame(1, 1, 1.0, "frame")
-        ),
-        RetentionPolicy.NoStore,
-        TaintClass.PixelDerived,
-    )
-    wire = base64.urlsafe_b64encode(source.to_json().encode()).decode()
-    with pytest.raises(BrowserError) as exc:
-        server.handle_tool_call("nbrowser_site_crawl", {"cursor": wire})
-    assert exc.value.code == InputFailure.CONTENT_REF
-    assert exc.value.message == "ref is not a crawl cursor"
+        server.handle_tool_call("nbrowser_site_crawl", {"cursor": staged})
+    assert exc.value.code == FailureCode.CONTENT_UNAVAILABLE
+    assert exc.value.message == "cursor already resumed or unknown"
     assert double.sent == [] and server.cursor_digests == []
+    assert staged in server.resolver.store
 
 
 def test_cursor_missing_bytes_refuse_and_clear_stale_custody() -> None:

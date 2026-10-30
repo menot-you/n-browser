@@ -2,11 +2,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-class PageState:
-    READY = "ready"
-    CLOAKED = "cloaked"
-
-
 # Field-for-field the walker's wire element (extract.rs SEMANTIC_WALKER).
 @dataclass
 class Element:

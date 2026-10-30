@@ -3,18 +3,9 @@
 import pytest
 
 import nott_spine
-from nott_spine.authority import (
-    ContentAuthority,
-    ContentIssuer,
-    ContentRef,
-    UntrustedContentRef,
-)
 from nott_spine.errors import (
-    BindingMismatch,
     InvalidDevicePixelRatio,
-    InvalidDigest,
     InvalidOrigin,
-    MissingCaptureFrame,
     MissingFreshnessMarker,
     ViewportTooLarge,
 )
@@ -24,96 +15,12 @@ from nott_spine.types import (
     MIN_CAPTURE_FRAME_DEVICE_PIXEL_RATIO,
     CaptureFrame,
     OriginMetadata,
-    RetentionPolicy,
-    SourceCapability,
-    TaintClass,
 )
-
-DIGEST_A = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-DIGEST_B = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 
 
 def test_public_surface_matches_pin() -> None:
-    absent = (
-        (ContentRef, "binding"),
-        (
-            UntrustedContentRef,
-            "digest source_capability origin retention taint binding to_dict to_json",
-        ),
-        (ContentIssuer, "source_capability"),
-    )
-    for cls, names in absent:
-        for name in names.split():
-            assert not hasattr(cls, name), (
-                f"{cls.__name__}.{name} is not public in the specification"
-            )
-
     for name in ("validate_binding", "validate_bounded_text", "validate_digest"):
         assert not hasattr(nott_spine, name)
-
-
-def authority() -> ContentAuthority:
-    return ContentAuthority.from_secret(bytes([7] * 32))
-
-
-def content_ref(
-    auth: ContentAuthority,
-    retention: RetentionPolicy,
-) -> ContentRef:
-    frame = CaptureFrame(1280, 720, 2.0, "capture-1")
-    origin = OriginMetadata.browser_capture(
-        "fixture://page", "2026-07-19T12:00:00Z", frame
-    )
-    return auth.issuer(SourceCapability.NBrowser).issue(
-        DIGEST_A,
-        origin,
-        retention,
-        TaintClass.PixelDerived,
-    )
-
-
-# 1. resolver_authenticates_without_reminting_retention
-
-
-# 2. authority_derive_inherits_taint_and_retention
-
-
-# 3. valid_wire_round_trips_and_policy_tamper_fails_binding
-def test_valid_wire_round_trips_and_policy_tamper_fails_binding() -> None:
-    auth = authority()
-    source = content_ref(auth, RetentionPolicy.NoStore)
-    valid_value = source.to_dict()
-    assert valid_value["source_capability"] == "nbrowser"
-
-    valid_wire = UntrustedContentRef.from_dict(valid_value)
-    resolver = auth.resolver()
-    resolved = resolver.resolve(valid_wire)
-    assert resolved.retention == RetentionPolicy.NoStore
-
-    tampered = dict(valid_value)
-    tampered["retention"] = "managed_purgeable"
-    tampered_wire = UntrustedContentRef.from_dict(tampered)
-    with pytest.raises(BindingMismatch):
-        resolver.resolve(tampered_wire)
-
-
-# 4. targeted_invalid_digest_and_frame_wires_are_rejected
-def test_targeted_invalid_digest_and_frame_wires_are_rejected() -> None:
-    auth = authority()
-    source = content_ref(auth, RetentionPolicy.EphemeralSession)
-    valid = source.to_dict()
-    _ = UntrustedContentRef.from_dict(valid)
-
-    bad_digest = dict(valid)
-    bad_digest["digest"] = "sha256:bad"
-    with pytest.raises(InvalidDigest):
-        UntrustedContentRef.from_dict(bad_digest)
-
-    missing_frame = dict(valid)
-    missing_frame["origin"] = dict(valid["origin"])
-    missing_frame["origin"]["capture_frame"] = None
-    with pytest.raises(MissingCaptureFrame):
-        UntrustedContentRef.from_dict(missing_frame)
 
 
 # 5. whitespace_only_provenance_is_rejected

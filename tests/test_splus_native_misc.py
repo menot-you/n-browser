@@ -33,7 +33,7 @@ def test_small_snippet_and_approved_provider_urls_are_pure() -> None:
 
     assert clamp_snippet("x" * 2048) == "x" * 2048
     assert clamp_snippet("") == ""
-    for host in ("api.z.ai", "api.minimax.io", "api.tavily.com", "api.firecrawl.dev"):
+    for host in ("api.tavily.com", "api.firecrawl.dev"):
         assert validate_provider_url("https://" + host + "/a") is None
     assert redact_asset_url_keep_path("file:///tmp/a") == "[invalid-url]"
     assert not is_cross_origin_internal(

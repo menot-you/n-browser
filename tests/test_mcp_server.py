@@ -4,35 +4,6 @@ from nbrowser.errors import BrowserError, FailureCode, InputFailure
 from nbrowser.mcp_server import TOOL_NAMES, McpServer
 
 
-def test_all_14_tools_callable() -> None:
-    server = McpServer()
-    assert len(server.tools) == 14
-    # The tools with a real dispatch branch; the loop below is the ratchet for
-    # the next declared-but-unbuilt name.
-    implemented = (
-        "nbrowser_page_capture",
-        "nbrowser_console_show",
-        "nbrowser_content_show",
-        "nbrowser_site_crawl",
-        "nbrowser_page_extract",
-        "nbrowser_page_interact",
-        "nbrowser_page_navigate",
-        "nbrowser_network_show",
-        "nbrowser_page_scrape",
-        "nbrowser_session_show",
-        "nbrowser_page_snapshot",
-        "nbrowser_tab_list",
-        "nbrowser_token_extract",
-        "nbrowser_web_search",
-    )
-    for t in server.tools:
-        if t["name"] in implemented:
-            continue
-        with pytest.raises(BrowserError) as exc_info:
-            server.handle_tool_call(str(t["name"]), {})
-        assert exc_info.value.code == FailureCode.NOT_IMPLEMENTED
-
-
 def test_undeclared_tool_is_refused_by_name() -> None:
     server = McpServer()
     with pytest.raises(BrowserError) as exc:
@@ -115,7 +86,7 @@ def test_content_get_pages_text_and_consumes_only_at_end() -> None:
     assert first["offset"] == 0
     assert first["next_offset"] == 20000
     assert first["total_chars"] == 50000
-    assert server.resolver.holds(ref)
+    assert ref in server.resolver.store
     last = server.handle_tool_call(
         "nbrowser_content_show", {"ref": ref, "offset": 20000, "max_chars": 50000}
     )
@@ -123,7 +94,7 @@ def test_content_get_pages_text_and_consumes_only_at_end() -> None:
     assert last["offset"] == 20000
     assert last["next_offset"] is None
     assert last["total_chars"] == 50000
-    assert not server.resolver.holds(ref)
+    assert ref not in server.resolver.store
     with pytest.raises(BrowserError) as exc:
         server.handle_tool_call("nbrowser_content_show", {"ref": ref})
     assert exc.value.code == FailureCode.CONTENT_UNAVAILABLE
@@ -191,7 +162,7 @@ def test_content_get_invalid_paging_preserves_ref(field: str, value: object) -> 
     }
     assert reply["result"].get("isError") is True
     assert json.loads(reply["result"]["content"][0]["text"])["code"] == "invalid_input"
-    assert server.resolver.holds(ref)
+    assert ref in server.resolver.store
 
 
 def test_content_get_refuses_capture_without_inlining_bytes() -> None:
@@ -219,7 +190,7 @@ def test_content_get_refuses_capture_without_inlining_bytes() -> None:
         payload = json.loads(reply["result"]["content"][0]["text"])
         assert payload["code"] == "content_unavailable"
         assert "PNG" not in json.dumps(reply)
-        assert not server.resolver.holds(shot["ref"])
+        assert shot["ref"] not in server.resolver.store
         with pytest.raises(BrowserError, match="capture"):
             server.handle_tool_call("nbrowser_content_show", {"ref": shot["ref"]})
     finally:

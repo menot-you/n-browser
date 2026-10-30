@@ -1,12 +1,16 @@
 """Python CDP decoding over real OS pipes; no claim of browser JavaScript execution."""
 
+from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 import pytest
+from cdp_double import CdpDouble, FakePage
 from test_ssrf_runtime import _Engine
 
 from nbrowser.design import DESIGN_PROBE, read_design_blueprint
 from nbrowser.errors import BrowserError, ClosedFailure
+from nbrowser.mcp_server import McpServer
 from nbrowser.session import BrowserLaunchConfig, BrowserSession
 
 
@@ -17,7 +21,9 @@ def _evaluate_frames(engine: _Engine, value: object) -> None:
         engine.emit({"id": index, "result": result})
 
 
-def test_design_wire_preserves_shapes_and_scrubs_references() -> None:
+def test_design_wire_preserves_shapes_and_scrubs_references(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     engine = _Engine()
     try:
         session = BrowserSession(
@@ -27,7 +33,7 @@ def test_design_wire_preserves_shapes_and_scrubs_references() -> None:
             "viewport": {"width": 900, "height": 600, "dpr": 2},
             "theme": {
                 "palette": ["red"],
-                "fonts": ["Inter"],
+                "fonts": ["Inter", "Café"],
                 "spacing": ["4px"],
                 "custom_properties": [{"name": "--paint", "value": "red"}, None],
             },
@@ -79,7 +85,8 @@ def test_design_wire_preserves_shapes_and_scrubs_references() -> None:
             "truncated": True,
         }
         _evaluate_frames(engine, raw)
-        evidence = read_design_blueprint(session, "t1").to_dict()
+        blueprint = read_design_blueprint(session, "t1")
+        evidence = asdict(blueprint)
         frames = [engine.frame() for _ in range(4)]
         assert [frame["method"] for frame in frames] == [
             "Target.attachToTarget",
@@ -140,6 +147,26 @@ def test_design_wire_preserves_shapes_and_scrubs_references() -> None:
             "keyframes": ["pulse"],
         }
         assert evidence["truncated"] is True
+        server = McpServer()
+        server.session = BrowserSession(
+            BrowserLaunchConfig(),
+            client_factory=lambda: CdpDouble(
+                [FakePage("https://fixture.test", "T", "")]
+            ),
+        )
+        monkeypatch.setattr(
+            "nbrowser.mcp_server.read_design_blueprint", lambda *_: blueprint
+        )
+        try:
+            reply = server.call_tool("nbrowser_page_scrape", {"format": "design"})
+            wire = reply["content"][0]["text"].encode("utf-8")
+            fixture = Path(__file__).parent / "fixtures" / "design-wire.json"
+            assert wire == fixture.read_bytes()
+            assert reply == {
+                "content": [{"type": "text", "text": wire.decode("utf-8")}]
+            }
+        finally:
+            server.close()
     finally:
         engine.close()
         engine.client.reader_thread.join(timeout=2)

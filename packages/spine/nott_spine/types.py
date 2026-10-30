@@ -189,22 +189,6 @@ class CaptureFrame:
         self._device_pixel_ratio = float(device_pixel_ratio)
         self._freshness_marker = freshness_marker
 
-    @property
-    def viewport_width_css_px(self) -> int:
-        return self._viewport_width_css_px
-
-    @property
-    def viewport_height_css_px(self) -> int:
-        return self._viewport_height_css_px
-
-    @property
-    def device_pixel_ratio(self) -> float:
-        return self._device_pixel_ratio
-
-    @property
-    def freshness_marker(self) -> str:
-        return self._freshness_marker
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "viewport_width_css_px": self._viewport_width_css_px,
@@ -307,22 +291,6 @@ class OriginMetadata:
         capture_frame: CaptureFrame | None = None,
     ) -> OriginMetadata:
         return cls(OriginKind.DerivedContent, locator, captured_at, capture_frame)
-
-    @property
-    def kind(self) -> OriginKind:
-        return self._kind
-
-    @property
-    def locator(self) -> str:
-        return self._locator
-
-    @property
-    def captured_at(self) -> str | None:
-        return self._captured_at
-
-    @property
-    def capture_frame(self) -> CaptureFrame | None:
-        return self._capture_frame
 
     def to_dict(self) -> dict[str, Any]:
         """Canonical origin dict in declaration order: kind, locator, captured_at, capture_frame."""

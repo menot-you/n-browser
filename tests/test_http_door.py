@@ -68,8 +68,6 @@ def test_http_door_bearer_admits_and_refuses() -> None:
         key_file = f.name
     env = dict(os.environ)
     for k in (
-        "ZAI_API_KEY",
-        "MINIMAX_API_KEY",
         "TAVILY_API_KEY",
         "FIRECRAWL_API_KEY",
         "NOTT_BROKER_SOCKET",

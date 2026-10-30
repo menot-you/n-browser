@@ -1,5 +1,5 @@
-"""nbrowser_page_capture emits a ContentRef this process signed, taken on the
-tab's own CDP session; the bytes stay in custody and never ride the text door."""
+"""nbrowser_page_capture takes the PNG on the tab's own CDP session; the bytes
+stay in custody and never ride the text door."""
 
 from __future__ import annotations
 
@@ -12,9 +12,6 @@ from typing import Any
 import nott_database
 import pytest
 from cdp_double import PNG_1X1_BASE64, CdpDouble, FakePage
-from nott_spine import (
-    UntrustedContentRef,
-)
 
 from nbrowser.errors import BrowserError, FailureCode, InputFailure
 from nbrowser.mcp_server import TOOL_DESCRIPTIONS, McpServer
@@ -46,7 +43,7 @@ def _double_server(
     return server, double
 
 
-def test_capture_emits_a_source_bound_to_the_real_frame_on_the_tabs_session() -> None:
+def test_capture_takes_the_png_on_the_tabs_session() -> None:
     server, double = _double_server()
     res = server.handle_tool_call("nbrowser_page_capture", {"retention": "no_store"})
     assert res["ref"] == "capture:" + PNG_DIGEST
@@ -54,24 +51,7 @@ def test_capture_emits_a_source_bound_to_the_real_frame_on_the_tabs_session() ->
     assert res["bytes"] == len(PNG_BYTES)
     assert res["taint"] == "pixel_derived"
     assert res["retention"] == "no_store"
-    source = res["source"]
-    assert source["digest"] == "sha256:" + PNG_DIGEST
-    assert source["source_capability"] == "nbrowser"
-    assert source["retention"] == "no_store"
-    assert source["taint"] == "pixel_derived"
-    assert source["origin"]["kind"] == "browser_capture"
-    assert source["origin"]["locator"] == "http://fixture.test"
-    assert source["origin"]["captured_at"].endswith("Z")
-    assert source["origin"]["capture_frame"] == {
-        "viewport_width_css_px": 800,
-        "viewport_height_css_px": 600,
-        "device_pixel_ratio": 1.0,
-        "freshness_marker": PNG_DIGEST,
-    }
-    resolved = server.content_authority.resolver().resolve(
-        UntrustedContentRef.from_dict(source)
-    )
-    assert resolved.digest == "sha256:" + PNG_DIGEST
+    assert "source" not in res
     assert [(m, s) for m, _, s in double.sent] == [
         ("Target.getTargets", None),
         ("Target.attachToTarget", None),
@@ -83,7 +63,7 @@ def test_capture_emits_a_source_bound_to_the_real_frame_on_the_tabs_session() ->
     ephemeral = server.handle_tool_call(
         "nbrowser_page_capture", {"retention": "ephemeral_session"}
     )
-    assert ephemeral["source"]["retention"] == "ephemeral_session"
+    assert ephemeral["retention"] == "ephemeral_session"
     assert [m for m, _, _ in double.sent].count("Target.attachToTarget") == 1
 
 
@@ -216,7 +196,6 @@ def test_managed_purgeable_keeps_the_png_only_where_a_nott_host_names_the_store(
     assert res["ref"] == "capture:" + PNG_DIGEST
     assert res["sha256"] == PNG_DIGEST
     assert res["retention"] == "managed_purgeable"
-    assert res["source"]["retention"] == "managed_purgeable"
     assert (root / f"{PNG_DIGEST}.png").read_bytes() == PNG_BYTES
     assert [p.name for p in root.iterdir()] == [f"{PNG_DIGEST}.png"]
 

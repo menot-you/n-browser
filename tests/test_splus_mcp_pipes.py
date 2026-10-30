@@ -14,12 +14,7 @@ from nbrowser.session import BrowserLaunchConfig, BrowserSession
 def test_provider_tools_without_credentials_never_open_transport(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    for key in (
-        "ZAI_API_KEY",
-        "MINIMAX_API_KEY",
-        "TAVILY_API_KEY",
-        "FIRECRAWL_API_KEY",
-    ):
+    for key in ("TAVILY_API_KEY", "FIRECRAWL_API_KEY"):
         monkeypatch.delenv(key, raising=False)
     server = McpServer()
     try:
@@ -28,7 +23,7 @@ def test_provider_tools_without_credentials_never_open_transport(
         )
         assert result["hits"] == []
         assert result["estimated_tokens"] == 0
-        assert len(result["lanes"]) == 4
+        assert len(result["lanes"]) == 2
         assert {lane["status"] for lane in result["lanes"]} == {"skipped_no_key"}
         with pytest.raises(BrowserError) as exc:
             server.handle_tool_call("nbrowser_web_search", {})

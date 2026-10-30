@@ -1,18 +1,11 @@
 """Shared content-reference types for nBROWSER.
 
-These types carry policy (source, origin, retention, taint) on digest-bound
-references. They do not grant authority and cannot represent a witnessed result.
+These types carry policy (source, origin, retention, taint) as wire values.
+They do not grant authority and cannot represent a witnessed result.
 """
 
 from __future__ import annotations
 
-from nott_spine.authority import (
-    ContentAuthority,
-    ContentIssuer,
-    ContentRef,
-    ContentResolver,
-    UntrustedContentRef,
-)
 from nott_spine.errors import (
     AuthorityError,
     BindingMismatch,
@@ -48,10 +41,6 @@ __all__ = [
     "AuthorityError",
     "BindingMismatch",
     "CaptureFrame",
-    "ContentAuthority",
-    "ContentIssuer",
-    "ContentRef",
-    "ContentResolver",
     "ContractError",
     "EmptyViewport",
     "InvalidAuthorityKey",
@@ -68,6 +57,5 @@ __all__ = [
     "RetentionPolicy",
     "SourceCapability",
     "TaintClass",
-    "UntrustedContentRef",
     "ViewportTooLarge",
 ]

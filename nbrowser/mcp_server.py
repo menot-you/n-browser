@@ -1,16 +1,14 @@
 import hashlib
 import json
 import os
-import secrets
 import threading
-import time
 from dataclasses import asdict
 from typing import Any
-from urllib.parse import SplitResult
 
 import nott_database
 from nott_database import captures
 
+from .auth import origin_of
 from .capture import capture_png
 from .console import (
     MAX_SESSION_RINGS,
@@ -23,7 +21,6 @@ from .console import (
 from .content_custody import FixtureContentResolver
 from .crawl import execute_crawl
 from .design import componentize, read_design_blueprint
-from .egress_guard import ActivationMode
 from .errors import (
     BrowserError,
     FailureCode,
@@ -94,7 +91,7 @@ INPUT_SCHEMAS: dict[str, dict[str, Any]] = {
         "properties": {
             "cursor": {
                 "default": None,
-                "description": "Resume token from a previous crawl of this process (opaque; resumes once; refused when minted by another process).",
+                "description": "Resume token from a previous crawl of this process (opaque; resumes once; refused when this process did not mint it).",
                 "type": ["string", "null"],
             },
             "host_url": {
@@ -261,19 +258,19 @@ TOOL_NAMES = [
 # Tool descriptions describe the handlers served by this runtime.
 TOOL_DESCRIPTIONS: dict[str, str] = {
     "nbrowser_page_snapshot": "Read the active tab's page: {view: {url, title, state (ready, loading, empty or {blocked: reason}), http_status, visible_text (at most 40,000 characters: the text blocks joined), text_blocks (at most 200), elements (at most 512), forms, cards, ...}, digest}. This becomes the latest snapshot that nbrowser_page_extract (without urls) reads. include_cards (default true) adds up to 50 article and list cards.",
-    "nbrowser_page_extract": "Two modes. Without urls: filter the latest nbrowser_page_snapshot (taken now only if none exists) and return {matches, count, what}: the text blocks containing `what` (case-insensitive), at most `limit`. When nothing matches, matches holds the page's first 200 characters instead (count 1), so check that a match contains `what`. With urls (1..50): return {documents: [{url, mode_used, markdown}]} and ignore what and limit. mode auto (default) fetches statically through the SSRF guard and uses Chromium only when the markdown is empty or a redirect is refused; static never uses Chromium; browser renders each url in an isolated context and does not check HTTP status. In static and auto, an HTTP 4xx/5xx or transport error on any url refuses the whole call (content_unavailable); a non-HTML body returns skipped: content_type.",
+    "nbrowser_page_extract": "Two modes. Without urls: filter the latest nbrowser_page_snapshot (taken now only if none exists) and return {matches, count, what}: the text blocks containing `what` (case-insensitive), at most `limit`. When nothing matches, matches is empty and count is 0. With urls (1..50): return {documents: [{url, mode_used, markdown}]} and ignore what and limit. mode auto (default) fetches statically through the SSRF guard and uses Chromium only when the markdown is empty or a redirect is refused; static never uses Chromium; browser renders each url in an isolated context and does not check HTTP status. In static and auto, an HTTP 4xx/5xx or transport error on any url refuses the whole call (content_unavailable); a non-HTML body returns skipped: content_type.",
     "nbrowser_page_scrape": "Scrape the active page: format is prompt (default, visible text), markdown, design (rendered blueprint), or components (componentized blueprint). Optional host_url navigates under the SSRF kernel first. Text above max_content_bytes (default 64 KiB, clamped to 1 KiB..4 MiB) returns a session-owned artifact ref for nbrowser_content_show. It reads the active tab (after navigating to host_url, if given) and replaces the latest snapshot; to read several pages, or one without navigating the active tab, use nbrowser_page_extract with urls. design and components return the blueprint JSON inline; max_content_bytes applies only to prompt and markdown.",
     "nbrowser_site_crawl": "Crawl a site same-origin (scheme+host+port of host_url) inside one isolated browser context: robots.txt honoured for UA *, breadth-first over the page links, each page as markdown. Stops at max_pages (default 25, ceiling 100), when the site is exhausted, or at the 120 s deadline, and, when pages remain (max_pages or deadline), returns a cursor that resumes once in this process; null when exhausted. A page that lands on another origin is recorded with off_origin and never harvested. No politeness beyond max_pages.",
     "nbrowser_page_interact": "Apply one interaction to the active tab, which must be a public or loopback http(s) page. This tool dispatches these eleven verbs: click, hover, scroll, focus, type, fill_form, clear, select, press_key, submit and auth_login. click and submit resolve the action URL of their control first, and refuse it (grant_required) when it leaves the page's origin for a private or loopback target; use nbrowser_page_navigate to change the page. press_key dispatches the named key to the focused element; an Enter that submits a form resolves the form's action URL the same way. auth_login fills a saved login profile, only on that profile's own origin. back, refresh and dialog refuse with grant_required. drag refuses with invalid_input. An interaction that takes no effect (nothing matches `selector`, a scroll that does not move) refuses with invalid_input. Returns {status, verb, url, observed_state}.",
     "nbrowser_token_extract": "Read the active tab's design theme as {palette, fonts, spacing, custom_properties, taint, rung}: the theme nbrowser_page_scrape format=design returns, without the rest of the blueprint. fonts are the most-used font-family values, not evidence that a font loaded.",
     "nbrowser_console_show": "Read closed, redacted console metadata from every attached tab: one ring per CDP session, and a detached or disposed session drops its ring. Returns {entries, taint, rung}: only each entry's level and category, at most the latest 200 entries merged across the sessions so every session that holds entries is represented, newest last; message text and arguments are never captured.",
     "nbrowser_network_show": "Read closed, credential-free request metadata (method + sanitized location) from every attached tab: one ring per CDP session, and a detached or disposed session drops its ring. At most the latest 500 entries merged across the sessions so every session that holds entries is represented, newest last.",
-    "nbrowser_page_capture": "Screenshot the active tab as a PNG; the image is not returned to you. Returns {ref, bytes, sha256, taint, retention, source}; nbrowser_content_show refuses the ref. retention no_store and ephemeral_session keep no bytes. managed_purgeable keeps one copy in the owner's capture cache until the owner clears it. It is refused (grant_required) when a NOTT host did not start this server.",
+    "nbrowser_page_capture": "Screenshot the active tab as a PNG; the image is not returned to you. Returns {ref, bytes, sha256, taint, retention}; nbrowser_content_show refuses the ref. retention no_store and ephemeral_session keep no bytes. managed_purgeable keeps one copy in the owner's capture cache until the owner clears it. It is refused (grant_required) when a NOTT host did not start this server.",
     "nbrowser_session_show": "Read the active local session state",
     "nbrowser_tab_list": "List local browser tabs with origin-only locations",
     "nbrowser_page_navigate": "Navigate the active tab to host_url (http or https; public hosts or loopback; private-network, link-local and cloud-metadata addresses are refused), opening a tab if none is open and launching headless Chromium on first use. Returns {status, url} with the requested url; the address the page landed on is the next snapshot's view.url. Navigation does not refresh the latest snapshot: call nbrowser_page_snapshot before nbrowser_page_extract (without urls).",
     "nbrowser_content_show": "Read a session-owned text artifact in character pages: offset defaults to 0; max_chars defaults to 20000 and is clamped to 200000. Returns content, offset, next_offset (null at end), and total_chars. The final page consumes the ref. Capture and download artifacts are refused, never inlined as text.",
-    "nbrowser_web_search": "Unified search across keyed web-intelligence providers (Z.ai, MiniMax, Tavily, Firecrawl). Queries all configured providers concurrently, merges and dedupes hits. Returns {hits, lanes, estimated_tokens}. The query is sent to every provider with a key; a provider without a key is reported in lanes as skipped_no_key, so zero hits with every lane skipped means search is unconfigured.",
+    "nbrowser_web_search": "Unified search across keyed web-intelligence providers (Tavily, Firecrawl). Queries all configured providers concurrently, merges and dedupes hits. Returns {hits, lanes, estimated_tokens}. The query is sent to every provider with a key; a provider without a key is reported in lanes as skipped_no_key, so zero hits with every lane skipped means search is unconfigured.",
 }
 
 
@@ -301,7 +298,6 @@ CONSOLE_KINDS: dict[str, tuple[ConsoleLevel, ConsoleCategory]] = {
 }
 # Bounded at APPEND per CDP sessionId, on the reader thread.
 NETWORK_RING = 500
-CAMPAIGN_B_TOOLS: frozenset[str] = frozenset()
 # One Runtime.evaluate on the tab's session: the frame a coordinate is bound
 # to must be the frame the screenshot was taken in, never Page.getLayoutMetrics
 # on a second session.
@@ -329,37 +325,14 @@ SERVER_INSTRUCTIONS = (
 )
 
 
-def origin_of(parts: SplitResult) -> str:
-    """The ascii origin serialization: scheme, host, and a non-default port.
-    Never the netloc — that carries userinfo."""
-    port_val = parts.port
-    is_default = (parts.scheme == "https" and port_val == 443) or (
-        parts.scheme == "http" and port_val == 80
-    )
-    port = f":{port_val}" if (port_val and not is_default) else ""
-    host = parts.hostname or ""
-    if ":" in host and not host.startswith("["):
-        host = f"[{host}]"
-    return f"{parts.scheme}://{host}{port}"
-
-
 class McpServer:
     def __init__(self) -> None:
-        self.tools = TOOLS
         self.session: BrowserSession | None = None
-        self.seam = AuthoritySeam(
-            activation=ActivationMode.LOCAL_DOM_EXCEPTION,
-        )
+        self.seam = AuthoritySeam()
         self.resolver = FixtureContentResolver()
         # Digests staged as crawl/map cursors: nbrowser_content_show refuses
         # them, and at most MAX_OUTSTANDING_CURSORS are held (crawl.py).
         self.cursor_digests: list[str] = []
-        from nott_spine import ContentAuthority
-
-        # Born with the process: a public constant lets anyone who read the
-        # source mint a ref that verifies, and refs never cross processes
-        # (FixtureContentResolver.store is a per-process dict).
-        self.content_authority = ContentAuthority.from_secret(secrets.token_bytes(32))
         self.console_buffer = ConsoleBuffer()
         self.network_entries: dict[str, list[NetworkEntry]] = {}
         self._network_lock = threading.Lock()
@@ -457,11 +430,8 @@ class McpServer:
         import hashlib
 
         digest = hashlib.sha256(data).hexdigest()
-        # Text keeps its existing ref; binary kinds have separate custody even
-        # when their bytes match text or another binary producer exactly.
-        ref = f"{kind}:{digest}" if kind == "download" else digest
-        self.resolver.store_bytes(ref, data, kind)
-        return ref
+        self.resolver.store_bytes(digest, data, kind)
+        return digest
 
     def handle_tool_call(self, name: str, params: dict[str, Any]) -> dict[str, Any]:
         if name not in TOOL_NAMES:
@@ -692,7 +662,7 @@ class McpServer:
             text = scrape_markdown_live(sess, tabs[0])
         elif fmt == "design":
             blueprint = read_design_blueprint(sess, tabs[0])
-            return blueprint.to_dict()
+            return asdict(blueprint)
         elif fmt == "components":
             blueprint = read_design_blueprint(sess, tabs[0])
             ir = componentize(blueprint)
@@ -726,16 +696,7 @@ class McpServer:
                 FailureCode.GRANT_REQUIRED,
                 "managed_purgeable requires a persistence grant",
             )
-        from urllib.parse import urlsplit
-
-        from nott_spine import (
-            CaptureFrame,
-            ContractError,
-            OriginMetadata,
-            RetentionPolicy,
-            SourceCapability,
-            TaintClass,
-        )
+        from nott_spine import CaptureFrame, ContractError
 
         sess = self.get_session()
         tabs = sess.tabs_list()
@@ -771,9 +732,7 @@ class McpServer:
         # Validate the frame before any side effect: a rejected probe must not
         # leave a staged blob or a kept PNG behind.
         try:
-            frame = CaptureFrame(
-                int(probe["w"]), int(probe["h"]), float(probe["dpr"]), digest
-            )
+            CaptureFrame(int(probe["w"]), int(probe["h"]), float(probe["dpr"]), digest)
         except ContractError as error:
             raise BrowserError(
                 FailureCode.CAPTURE_EXPORT_FAILED,
@@ -788,19 +747,6 @@ class McpServer:
                 raise BrowserError(
                     FailureCode.CAPTURE_EXPORT_FAILED, str(error)
                 ) from error
-        origin = OriginMetadata.browser_capture(
-            origin_of(urlsplit(str(probe["href"]))),
-            time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            frame,
-        )
-        policy = {
-            "no_store": RetentionPolicy.NoStore,
-            "ephemeral_session": RetentionPolicy.EphemeralSession,
-            "managed_purgeable": RetentionPolicy.ManagedPurgeable,
-        }[retention]
-        source = self.content_authority.issuer(SourceCapability.NBrowser).issue(
-            "sha256:" + digest, origin, policy, TaintClass.PixelDerived
-        )
         # Pixels never ride stdio: the ref does.
         return {
             "ref": ref,
@@ -808,7 +754,6 @@ class McpServer:
             "sha256": digest,
             "taint": "pixel_derived",
             "retention": retention,
-            "source": source.to_dict(),
         }
 
     def _tool_content_get(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -952,8 +897,6 @@ class McpServer:
             raise BrowserError(FailureCode.NO_ACTIVE_SESSION, "no active page")
         if what:
             matches = [b for b in view.text_blocks if what.lower() in b.lower()][:limit]
-            if not matches and view.visible_text:
-                matches = [view.visible_text[:200]]
         else:
             matches = view.text_blocks[:limit]
         if content_boundaries:

@@ -57,7 +57,7 @@
     "CHANGELOG.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "3969dce6e255aa56422ba5ce255f99d16aeebe44e265b476c8b4fcd7393dc323"
+      "sha256": "660081b44af28b157f956b47b9edf42b5e5c556ea279f56175e38d32bd066e52"
     },
     "CITATION.cff": {
       "executable": false,
@@ -67,7 +67,7 @@
     "CLAUDE.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "0c76efc4751ed4b7bf8728bbcc56a0ed0efdf9296cf949f54506fee2d99907a1"
+      "sha256": "a2b67ce5fc58bc446bd9dfe9a974be514429fcb568b12281d33d7c03a8db1288"
     },
     "CODE_OF_CONDUCT.md": {
       "executable": false,
@@ -87,7 +87,7 @@
     "README.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "683f5b5230c6b7e99ae871d281babb81c9350422ea54afeeda4b89d6c735334a"
+      "sha256": "da32aed94f57ad3c861c7cc627ea0e04d0bb3ee58fc3b6e561bec0ab32e79b4b"
     },
     "SECURITY.md": {
       "executable": false,
@@ -102,7 +102,7 @@
     "docs/ARCHITECTURE.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "088466b7e194b510f647786c2cc206e374b854a0189df03e7080f997d1621929"
+      "sha256": "d28910084cbad954e2baa64ade4199c5aae17636b942c195e2fb4f97ec64ba23"
     },
     "docs/DOCUMENTATION.md": {
       "executable": false,
@@ -117,22 +117,22 @@
     "docs/PRIVACY.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "893dd7bf220ff2ae4233877de317bc32d26b45d7dd37cd2ae2c5081dc173e0db"
+      "sha256": "caeca89c67425c152b76cbae8b8c99cef14d6be528e482b36e89bb87e3c32f22"
     },
     "docs/QUALITY.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "0dffa99c0c97b3f0e05c919ebf78476bef1e65d92840beb7d2895d75486d5d83"
+      "sha256": "ab3c3afa9071abba078da8a4c7921e15bf880bb2200b872c934639947c14c916"
     },
     "docs/README.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "1ddbec7e4307dee10c97b7a92657751a4c1dbf767f94b5ccfbc3850cbcac4083"
+      "sha256": "5e4aef91e8b56841323207d0364b6cef9ec45376ad53c49df55cde6ae875d400"
     },
     "docs/REFERENCE.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "99acf57dae168faf9408b5d4f84a81bb14661ed3228dd645a3162c52d2e5c68b"
+      "sha256": "cac68303164ab1e8f6fbb6988d3f8da7af4376ee748fbd57313781c88f7a5266"
     },
     "docs/ROADMAP.md": {
       "executable": false,
@@ -142,12 +142,12 @@
     "docs/RUNBOOK.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "fc81ce3bb30aee402f88775e3df25d7893ea0aa5080db8dad523d956d518fec2"
+      "sha256": "d5c59da91a111c6f2385a5cbd21fa291202782ea2997dba8773ed650cfc320e4"
     },
     "docs/SETUP.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "cc2fd24a27ec02f5890ec56848ee9245d744451cda2d43bc899b9134d5c75153"
+      "sha256": "4b7690dbc4461486273a92e4e4ffd6db9b5fdcbb41c5cf5902aa8e0133778e8b"
     },
     "docs/TROUBLESHOOTING.md": {
       "executable": false,
@@ -162,7 +162,7 @@
     "docs/export-map.json": {
       "executable": false,
       "mode": 420,
-      "sha256": "4502e6d7c31ef4b21aef4e022b5b9a9520be0110bc988d07e4f806f003153fc6"
+      "sha256": "472a30ca7fc3117cbe44624631f121f612e74df14575d949564b2722fa1f1610"
     },
     "docs/figures/README.md": {
       "executable": false,
@@ -177,7 +177,7 @@
     "docs/figures/browser-security.svg": {
       "executable": false,
       "mode": 420,
-      "sha256": "5c0e9f501518c955b6c06e4d5d51689e779bc1a974939518669ea2071b196798"
+      "sha256": "9485db25c58e71d3e64f1767bc45ab1b9c997b4ecb118d7a2fe411f75dea829c"
     },
     "docs/figures/browser.svg": {
       "executable": false,
@@ -192,7 +192,7 @@
     "docs/figures/chart-tools.svg": {
       "executable": false,
       "mode": 420,
-      "sha256": "3b07a92642c32c576c124e03d8390263797d8b13804e066a69fe8fcf0139e00b"
+      "sha256": "b321b95138af1858fee7d35bc5205f2ba68e0d82f79a23a4aa20d744576be670"
     },
     "docs/figures/hero-napple-dark.svg": {
       "executable": false,
@@ -277,7 +277,7 @@
     "docs/figures/memory-system1.svg": {
       "executable": false,
       "mode": 420,
-      "sha256": "d37c5315810d2328cd5989f545825cb68bdebfc4a81d216fff637b958c7904c2"
+      "sha256": "2da39dbbeba09a7802fa66f5778adf9a559a4d26c9f8507925e60f7f323e9b10"
     },
     "docs/figures/memory.svg": {
       "executable": false,
@@ -292,7 +292,7 @@
     "docs/figures/plugin-lifecycle.svg": {
       "executable": false,
       "mode": 420,
-      "sha256": "e1d3e812ae55fb005da561fe004a821cf3e1ef4430fbd88b8d270c57994c3e72"
+      "sha256": "20d1ae4317ed467991ff3063ce060d3d8f7d8cb867fb1722c3c41b1f2352697f"
     },
     "docs/figures/plugin.svg": {
       "executable": false,
@@ -313,11 +313,6 @@
       "executable": false,
       "mode": 420,
       "sha256": "5fb7a81f63f9c84b217a092fbc9edba1f531c7b95e3b076631a07e4ec5c289ef"
-    },
-    "docs/setup-catalog.json": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "ba1352c26652bee349b1149e94f184dcc04f1354f486c5283269f56945a488aa"
     },
     "llms.txt": {
       "executable": false,
@@ -357,22 +352,22 @@
     "nbrowser/content_custody.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "aac1984de93aea21e0aface0036625659e0dc6f0ff70859f6a471d04b6fc05fd"
+      "sha256": "fee93b56bafe56577013a258ee3f0ab5a1e44775f2eb2262abe5824d32685d01"
     },
     "nbrowser/crawl.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "62472058d229520b4236fabcf47871f9f8d26aca5b5c44a7a4ff396d4e2d942b"
+      "sha256": "d6ad80eb012e17979792eb3fe8a0cfe114861f76b64ca1fccab5c5497fe150cc"
     },
     "nbrowser/design.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "8bb6191c35df716e8e406015d011f11cb20a797634b17bdaf5448d0d736e79b2"
+      "sha256": "791bece368df9491969f71be105712e05c27a95a4e3b988e8d29eb587a16af06"
     },
     "nbrowser/egress_guard.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "cb2f0b24b101be20d5236733a87f181ca0d240cd5deced1ddf299dc6d22d2cc3"
+      "sha256": "ed9f90a0131f733c2538e026d5fed55e78e66e8387ac09c7236cda5c64f93df0"
     },
     "nbrowser/egress_proxy.py": {
       "executable": false,
@@ -382,17 +377,17 @@
     "nbrowser/errors.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "ef6cd7db47451cebe4d2c73d8fa8582e17229ecb5bf71a7f865d7034b8215b16"
+      "sha256": "6168ed2a9b6bfadd450fc2e24f62ea8c42e9abd5e2bb5fc954e9da123287aebc"
     },
     "nbrowser/extract.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "175bc3bffdab9c813048a5ae9c2358adf0dfd3f596208d51f5f129c534acca22"
+      "sha256": "eb552e62b3e8c03f646e59741d3d829e10f34d561150f409c222c181bbc4b2fa"
     },
     "nbrowser/frontier.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "d76d37f06f604a3e6f2f0390f9104900e054df1310827db6e4072c30e5bfb5dc"
+      "sha256": "48e04b5fed270b86a68b14be2a6754063483cb4578fb5e7a07ba80ebe8eb5c2e"
     },
     "nbrowser/interact.py": {
       "executable": false,
@@ -407,7 +402,7 @@
     "nbrowser/mcp_server.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "c5d523d3f9277adf77027ec8a400cd919068b43355df1e6acf901da7967c7363"
+      "sha256": "32862e5fa8ac953e5ec305f396b5f7d5c54eab6209524ef50637da5b1e179352"
     },
     "nbrowser/network.py": {
       "executable": false,
@@ -437,7 +432,7 @@
     "nbrowser/providers/base.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "f48ee59b5969ea65bad45334b6d1ccad5a945a461a2fed0be3339f1884f54be5"
+      "sha256": "05fbd485fab91cb04129a63375c4c4fb98069a0e12c0c1951c82bc4573da0476"
     },
     "nbrowser/providers/firecrawl.py": {
       "executable": false,
@@ -447,22 +442,12 @@
     "nbrowser/providers/merge.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "58bc49968f9072bcb25ce81e11fc3892c25a98de81b7c93f47c596a03f7b3fb7"
-    },
-    "nbrowser/providers/minimax.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "66af2a4c69f1d190b5621a5187f59714421988a49cc88e478fff62cb9e50bf85"
+      "sha256": "06da08dd5fb2eb2a3f2dab92d29e14cc57b9be07b4d3120da752eb28964cf556"
     },
     "nbrowser/providers/tavily.py": {
       "executable": false,
       "mode": 420,
       "sha256": "59fee8cbfb6af9b50fb6b88ef26f4c2dc53241483d1647a7f5006e4e4678764f"
-    },
-    "nbrowser/providers/zai.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "0793808bfdd7af0f9b5c184f331229681836aba551993f0081c1518f90ef09a5"
     },
     "nbrowser/py.typed": {
       "executable": false,
@@ -472,22 +457,22 @@
     "nbrowser/renamed.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "417677bf4bffd79911e1c3de21ff16733c31272b07c36bed454e8cc80e173e8b"
+      "sha256": "5dacf35d3ee44e824358bb0dbf3a9dfe640560a203d23cc7f4c7557b77bfee48"
     },
     "nbrowser/sanitize.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "64dde5bacc26fc7b518885019fe94434e2cbb48aacff44b86628124030665e0e"
+      "sha256": "c8a3235f1c2edbb0bbd0c6f47d1f70461632aa7bb44ca011200d7a8003d5e343"
     },
     "nbrowser/seam.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "905df3aa2768e730abded9b3f1bec2907e28caf54f902c7ee3f4fd60b950ea0d"
+      "sha256": "f1bf11dd91ea1e8362d24b6c8b71c03f3ada9802df7fbe95bb5a95766758b25e"
     },
     "nbrowser/semantic.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "b72b86097476ffb9a4ff86f72df3542c53aab0f0d9fbaa49f224c3e456d147b3"
+      "sha256": "6993c70b7f0ef535d04b177f8190521fe7f43ee9cd258dc667fbfd2568523572"
     },
     "nbrowser/semantic_walker.py": {
       "executable": false,
@@ -497,12 +482,12 @@
     "nbrowser/session.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "7f7ed47e2c38e3d6939882823a67a6a048469ba93959a309c04acad56ebf3b2c"
+      "sha256": "a57d2563b17b846f5d64ec954847f895719ec6aa27b9573e1ec1063b6baba132"
     },
     "nbrowser/static_extract.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "3a3798cd79c2538f3000d466a8973a9f9ec921128344c3e1da50400ff9edb4bb"
+      "sha256": "66d655711f3dc899ff5ef9e435a66c310c131e8a73f7c11314997eef430799d7"
     },
     "nbrowser/transfer.py": {
       "executable": false,
@@ -542,22 +527,17 @@
     "packages/database/README.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "beccc07ab57b6711346e3ab7f51ac9efa8d18e26b5f2ad0341752204370f67c9"
+      "sha256": "3948386d454caaa75c8e74fa1862b30a24144c35d4e2d46f2af870c3430a101c"
     },
     "packages/database/nott_database/__init__.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "7cb409fab11f0996a07e8a194c33913709023cb1ce8db04d421822d7b248c2ec"
-    },
-    "packages/database/nott_database/_directory.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "b4d56e20514ea751ceb904676e56f3596bb74d6e7d2c68841a770fcc69ca6caa"
+      "sha256": "a959ad6633ab0a5f6d12314c9dde0377c243106e4d1652e78d17a5c83b0f9a5e"
     },
     "packages/database/nott_database/captures.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "d45bc58dffadcf5e3c1ed5f02b87453bd2b1c0a0440ef1fc28d85bb4ff256b59"
+      "sha256": "dc199ef700937ff9276676090577d7907f0916b8da6d19741fbb7b42e27fb3c0"
     },
     "packages/database/nott_database/py.typed": {
       "executable": false,
@@ -567,7 +547,7 @@
     "packages/database/nott_database/pytest_plugin.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "2522908a183b85ee2f01778d9cd8de8676044048383e7683cadfe00488abefdf"
+      "sha256": "dc635fada70af5b9800920c8ee7cd9b74aa6683314911f716081ce187b99eca8"
     },
     "packages/database/pyproject.toml": {
       "executable": false,
@@ -577,22 +557,22 @@
     "packages/database/tests/test_captures.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "52b77bde2918979bd5c4de0ce9fda6b169040821cd7b1c1457eca50d0d1e17e5"
+      "sha256": "bc5ad054ad71cadc6f72da8b12be8162dbdb9d4b8c715ec796b1a79b56205ec7"
     },
     "packages/database/tests/test_database.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "cdf3aa71b30c68165354cc973ece86fdeca08b7e00c06ffc08484ff47c546154"
-    },
-    "packages/database/tests/test_directory.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "544fba8a13398883ab24b0baf1c1450a3ef937bf1641a8a36032f50b1479b55c"
+      "sha256": "0d6281aa2c01a5e4a6fb4a68c57cf5446782fdd69607c9b2a67c1a31c2d32bc6"
     },
     "packages/database/tests/test_live_store_child.py": {
       "executable": false,
       "mode": 420,
       "sha256": "0c14df3c25ed520e6108bc45180824f5ccfa8716d4c17258ade578facd6e375c"
+    },
+    "packages/database/tests/test_pytest_plugin.py": {
+      "executable": false,
+      "mode": 420,
+      "sha256": "af996ec0e8321041a6a9b2b3fc1fcfdf220d9d3891c588a23122bb1866318c4f"
     },
     "packages/netdoor/LICENSE": {
       "executable": false,
@@ -652,17 +632,12 @@
     "packages/spine/README.md": {
       "executable": false,
       "mode": 420,
-      "sha256": "581b34e7636085ba5dba7ff31a7c8366fdf93a17b33431d71414c486e88923ba"
+      "sha256": "aa4253294a2442b08d7dddd15ddd5672d98db7e7661b42191be1a46e88516591"
     },
     "packages/spine/nott_spine/__init__.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "501bf2496982110029c76a3bb95ec8dd6d1b7c8bbc399c22d1cfe5000d0a221d"
-    },
-    "packages/spine/nott_spine/authority.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "011bdde83e68ce931bfebb222a71049bb629a2dedf637ec6b51f4e3bcabc9d25"
+      "sha256": "acc47b3768d8f923f2ad05143fd3e0d371cb3cf2b3f581e66b72afb527264e66"
     },
     "packages/spine/nott_spine/errors.py": {
       "executable": false,
@@ -677,22 +652,17 @@
     "packages/spine/nott_spine/types.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "264ff4889987dce890c3fc5248b31321ce05e5eb4b58b34540d9283e449a42a4"
+      "sha256": "71d1db401a7aa839ab0f8598dbe13931328bd602073b7e9595a19c0382887746"
     },
     "packages/spine/pyproject.toml": {
       "executable": false,
       "mode": 420,
       "sha256": "27584ea7daec27621814f9b96dc9eda3a8ca7318adf53d6912fbb6e07519f922"
     },
-    "packages/spine/tests/test_authority.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "4323ddbf9c15291f17dcb9ec80201ca8ecf165fac8c8e498062cfa7eb7e7ea62"
-    },
     "packages/spine/tests/test_contract_observations.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "ca538df668990ca7eeb0743a006c5133bbfa7f3f8171bed44e016e2fd75cff06"
+      "sha256": "ff2cffa0e92708de67f75a7067330db2ad2baca1e3314d412044f9886fb37165"
     },
     "packages/spine/tests/test_errors_core_branches.py": {
       "executable": false,
@@ -702,37 +672,27 @@
     "packages/spine/tests/test_native_inventory_contracts.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "6c674eab09c511bbf4b80f01ac4e82594de84f0e13e19cec9cd7b79f4752895e"
+      "sha256": "4aad12bbb2b5ede6c805b91ef9176eefafbd4dc7e1c6b66598c08c1387df2800"
     },
     "packages/spine/tests/test_pin_parity.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "ccd1472555c584c72dcb3c9160d7b022f5684cc2d6fa08d78cc5fe7ca2552c27"
-    },
-    "packages/spine/tests/test_properties.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "df4e2b8df68bba7919465bf36ad4927f46e11afcbcfdc209d34e097e960b8183"
+      "sha256": "9d3af586103af50f05c45128eb95645bc84ab60c5ec1f8881e0a07d02fa5e090"
     },
     "packages/spine/tests/test_review_regressions.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "6f3d2a5ac1183024724701085d7428b5f820a8404b11d2f6bdacdd9590dca97f"
-    },
-    "packages/spine/tests/test_s_authority_final.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "b6dd46665c1e279d0bd7a31010bd9a7166953fbb54992bcd92d9985fe28739b5"
+      "sha256": "c7aa687970fbb523f5831812ab42865301b92bea5120e4b6591117bcf190e6a9"
     },
     "packages/spine/tests/test_types.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "eaafa21f45ed3c308a5c58172f2cb3f22371fe810f5aeb78f12a816d2e8f198d"
+      "sha256": "79caeea6c34904a02a7bbeca67a0f1e94c8992067d773eaa355b1a2ec1cd1962"
     },
     "packages/spine/tests/test_validation_boundaries.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "672315f46044adb96a69d385c73abf4a6d02e53b8a587862a4fe93b02081614c"
+      "sha256": "b866d871612913e1430434ee980aef0168da76e562009f11e4bc2f5d50c17f54"
     },
     "pyproject.toml": {
       "executable": false,
@@ -753,6 +713,11 @@
       "executable": false,
       "mode": 420,
       "sha256": "222b50d213cf3e9dab6e3d855351d2b7cd0d73f0fc183df9f2b308ba3ff268d6"
+    },
+    "tests/fixtures/design-wire.json": {
+      "executable": false,
+      "mode": 420,
+      "sha256": "80071d18d460432926c07524db7e8f4e0b8764337f20f396ab93f1fb4d672c80"
     },
     "tests/test_audit20_native.py": {
       "executable": false,
@@ -782,12 +747,7 @@
     "tests/test_capture.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "3361019627a14b7cefa69f8c6f2007332a46ef825f8f1372029dc27ae922a07b"
-    },
-    "tests/test_capture_source_property.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "e559f21d460532ba4509be87af7cd4fbf9e9fe2ed3d04b858899308709b9294d"
+      "sha256": "cd0416b29d9ca58d73d71780ec28c9841151afd14c502ae6f60116abdc33f6c1"
     },
     "tests/test_cli.py": {
       "executable": false,
@@ -802,12 +762,12 @@
     "tests/test_docs_surface_counts.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "eebcbe900fa9c41e0d500e8566d16487851de95c00f13e42fe3a413891a9146f"
+      "sha256": "f8265b47d5603ed0a53de692dfc31c0f68876908cfc67a7319a993601cc48546"
     },
     "tests/test_door.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "fbeef19a0df83d686ae2fabcf631840fcddc62dbe0617ff1038cf60658b0d6ab"
+      "sha256": "e3f180564696e270ba517ade772282dcab84cba68dfe7d800fa91281750b51d0"
     },
     "tests/test_emancipation.py": {
       "executable": false,
@@ -819,11 +779,6 @@
       "mode": 420,
       "sha256": "980f7e8ecbba9fa08735ff409a6e3b7b10919984f4d978b1ad1063ff9494c943"
     },
-    "tests/test_errors_wire.py": {
-      "executable": false,
-      "mode": 420,
-      "sha256": "2ef0f8a36a8c4ccf7224b1778b314451f8ca78745a04a8ee7562066ef5e4f45a"
-    },
     "tests/test_extract.py": {
       "executable": false,
       "mode": 420,
@@ -832,7 +787,7 @@
     "tests/test_extract_crawl_cluster.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "e1113d65805f1eaad33f086da4fb66d49dac47fde2a796fa871abbdd377eea4f"
+      "sha256": "5c9787fda904aacc730af96b70662643e6a0b009400112598cd3d2a81de982b3"
     },
     "tests/test_extract_patch_coverage.py": {
       "executable": false,
@@ -847,12 +802,12 @@
     "tests/test_http_door.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "af23db85c375aee64ca420732150e0e2bd51700ba45019970a94e6b30e7210fd"
+      "sha256": "1e9590002d82ac39f9d1178962e9e7a613f915f8203427ce3536a70089e74ed3"
     },
     "tests/test_mcp_server.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "e6b7fc47f56da39ea038ca93f9a7805d4dc2245b038fe31f201d1f8ff34cd2d5"
+      "sha256": "3e0468ff4480673216cf0a039fb097cf5b3fee98ae54c0bb17fe006764fa3785"
     },
     "tests/test_mutant_kills.py": {
       "executable": false,
@@ -887,12 +842,12 @@
     "tests/test_providers.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "4d1eef122d91132b8c256a7df6a985327911fb24b62c95ffab8b80449dfde4c8"
+      "sha256": "693213ca87242ef684da3695e282715f265d597fef8d7c6589a6b139309f3315"
     },
     "tests/test_renamed_variables.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "d098cb18cbfa3637bea8a3a9f4f96fa108cf90ebf0dc8891bbedb4ab932159dd"
+      "sha256": "1bec43d3493358f7bac4b1068d9e69dbe43e1ae497444fb7968ea64c37881929"
     },
     "tests/test_sanitize_patch_coverage.py": {
       "executable": false,
@@ -947,12 +902,12 @@
     "tests/test_splus_mcp_pipes.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "03b7208a9fafaf00d56de197055d56f3e41a10d12210c84bd515f6c0e148a948"
+      "sha256": "ee888cd67efeb3b92dcd29030954802b7d5d6c249c22f95743ce48ad803df8cf"
     },
     "tests/test_splus_native_misc.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "1d5e9ef290f1926c3aa93a83f56314b2debf04e12434e3e38bc8d296850ade0d"
+      "sha256": "b5b1a4b15a0eb6be06354655d3a48591a235d3226ebde552c09d10d961d83228"
     },
     "tests/test_splus_node_launchers.py": {
       "executable": false,
@@ -962,12 +917,12 @@
     "tests/test_splus_observation_guards.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "f01c49447a03fbc8daab91fb14f4f1db0e83c7458b3ff6f6252e481e0c7789ad"
+      "sha256": "67bc5c5d449b2174ef54035c89b0b0ecb6a34850bba4d240edee0a0a09ac4182"
     },
     "tests/test_splus_pipe_design.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "e60fdb3082404216ba7334737c94f07a7a48688b1a9b33db2899bcfa03162e1b"
+      "sha256": "5f66a1d5c4d8e8e5d87a5ad9229684e3ec82643c9bbb8ff1415dbca339eecafe"
     },
     "tests/test_splus_pipe_properties.py": {
       "executable": false,
@@ -977,17 +932,17 @@
     "tests/test_splus_preflight.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "369d068ebe17b61c28626068d301481740e9b40bd0e1bd0a650a2a71fee27e85"
+      "sha256": "ddbd72783198309c1de3d7e49c6693c97fe43484c67389c6a9cb209b8fce69cb"
     },
     "tests/test_splus_properties.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "0529e6f501287c47bb5468d979da468b23bfb051e7cae67d4d599c364e881525"
+      "sha256": "01506642c8fb2f25ef179fd86f6e179218b816a5833f55090b9987d2eaf09f52"
     },
     "tests/test_splus_provider_parsers.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "ccdcc00c25164655e13d0e747aa1daffb04873b856ccc7c6fcf3ef0a0f3a6737"
+      "sha256": "f96f13bc911b04e0235c5dbe6de748d868de3093fb78bc9e20dd65bc55b3f628"
     },
     "tests/test_splus_pure_boundaries.py": {
       "executable": false,
@@ -1002,27 +957,27 @@
     "tests/test_ssrf_runtime.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "34dbd8db63c2c24ca7300f440fe7d62d09670c3a3e05fd95ad004f42586f523f"
+      "sha256": "9f476f3ee659904349b415033bcbba1d36958cc2fb1ef5b041d1a10ffb22fb0d"
     },
     "tests/test_static_extract.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "70cf8cd7bcbc4d838fffbb4e8d83eb031748a72e215a194bbc97853b4043d498"
+      "sha256": "890e5d86102434091e81bf4a28fcfedf822e523a17a45b90792ea9a2f5d3d1b3"
     },
     "tests/test_surface_contract.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "b14a40d8ce0212adc1e73dafe8fa800caabcff61e0be56f1a679762c1e52a9c8"
+      "sha256": "e3bd2f5b16919d72135868f18f0c2d8bd22d35f1501981cc1cfe720a87818b7b"
     },
     "tests/test_surface_patch_coverage.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "ad58e1b1671632d503950f8731a8af3c38178ec549affe64fafe64b0e0771c17"
+      "sha256": "9c3e5b154255ceb18610cd523d1662f46b659940acb4d6b6e8629ae95a152386"
     },
     "tests/test_types.py": {
       "executable": false,
       "mode": 420,
-      "sha256": "8b77a7cfa5497c154edba7ed3823b2a05723f8be9a4a7ac61a5f26319e67a13a"
+      "sha256": "d4f2f849587d9fcd320f75e98a278839b31d5d5b8232d8c9b37bdaec185cd917"
     },
     "tests/workspace_root.py": {
       "executable": false,

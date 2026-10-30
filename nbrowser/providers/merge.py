@@ -11,7 +11,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from . import firecrawl, minimax, tavily, zai
+from . import firecrawl, tavily
 from .base import LaneReport, LaneStatus, ProviderKey, SearchHit
 
 SNIPPET_CAP = 2 * 1024
@@ -67,8 +67,6 @@ def merge_search(
 
 
 LANES: list[tuple[str, str, Any]] = [
-    ("zai", "ZAI_API_KEY", zai),
-    ("minimax", "MINIMAX_API_KEY", minimax),
     ("tavily", "TAVILY_API_KEY", tavily),
     ("firecrawl", "FIRECRAWL_API_KEY", firecrawl),
 ]

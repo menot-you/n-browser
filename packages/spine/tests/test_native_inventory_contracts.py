@@ -16,10 +16,6 @@ def test_export_registry_exposes_the_complete_public_api() -> None:
         "AuthorityError",
         "BindingMismatch",
         "CaptureFrame",
-        "ContentAuthority",
-        "ContentIssuer",
-        "ContentRef",
-        "ContentResolver",
         "ContractError",
         "EmptyViewport",
         "InvalidAuthorityKey",
@@ -36,7 +32,6 @@ def test_export_registry_exposes_the_complete_public_api() -> None:
         "RetentionPolicy",
         "SourceCapability",
         "TaintClass",
-        "UntrustedContentRef",
         "ViewportTooLarge",
     }
     assert set(nott_spine.__all__) == expected
@@ -73,7 +68,7 @@ def test_origin_constructor_accepts_wire_kind_strings(kind: OriginKind) -> None:
     frame = CaptureFrame(100, 100, 1, "fresh")
     actual = OriginMetadata(kind.value, "fixture://origin", "now", frame)
     expected = OriginMetadata(kind, "fixture://origin", "now", frame)
-    assert actual.kind is kind
+    assert actual.to_dict()["kind"] == kind.value
     assert actual == expected
     assert actual.to_dict() == expected.to_dict()
 

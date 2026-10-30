@@ -265,6 +265,28 @@ def _redact_param_string(qs: str) -> str:
     return ";".join(safe_parts)
 
 
+def _redact_path(path: str) -> str:
+    path_segments = path.split("/")
+    safe_segments: list[str] = []
+    prev_seg_is_secret_key = False
+    for seg in path_segments:
+        dec_seg = _unquote_fixed_point(seg)
+        if is_secret_token(dec_seg) or prev_seg_is_secret_key:
+            safe_segments.append("[redacted]")
+        else:
+            safe_segments.append(seg)
+        clean_seg = dec_seg.strip().lower()
+        prev_seg_is_secret_key = (
+            clean_seg in _SECRET_KEYS
+            or clean_seg in _UNAMBIGUOUS_SECRET_SUBSTRINGS
+            or "password" in clean_seg
+            or "passwd" in clean_seg
+            or "token" in clean_seg
+            or "secret" in clean_seg
+        )
+    return "/".join(safe_segments)
+
+
 def redact_url_keep_path(value: str) -> str:
     if value == INLINE_DATA_REDACTED:
         return value
@@ -305,25 +327,7 @@ def redact_url_keep_path(value: str) -> str:
     else:
         netloc = ""
 
-    path_segments = parsed.path.split("/")
-    safe_segments: list[str] = []
-    prev_seg_is_secret_key = False
-    for seg in path_segments:
-        dec_seg = _unquote_fixed_point(seg)
-        if is_secret_token(dec_seg) or prev_seg_is_secret_key:
-            safe_segments.append("[redacted]")
-        else:
-            safe_segments.append(seg)
-        clean_seg = dec_seg.strip().lower()
-        prev_seg_is_secret_key = (
-            clean_seg in _SECRET_KEYS
-            or clean_seg in _UNAMBIGUOUS_SECRET_SUBSTRINGS
-            or "password" in clean_seg
-            or "passwd" in clean_seg
-            or "token" in clean_seg
-            or "secret" in clean_seg
-        )
-    safe_path = "/".join(safe_segments)
+    safe_path = _redact_path(parsed.path)
 
     safe_params = _redact_param_string(parsed.params) if parsed.params else ""
     safe_query = _redact_param_string(parsed.query)
@@ -332,25 +336,7 @@ def redact_url_keep_path(value: str) -> str:
     if safe_fragment:
         if "/" in safe_fragment or "?" in safe_fragment:
             frag_path, has_q, frag_query = safe_fragment.partition("?")
-            frag_segs = frag_path.split("/")
-            safe_frag_segs: list[str] = []
-            prev_frag_is_sec = False
-            for s in frag_segs:
-                dec_s = _unquote_fixed_point(s)
-                if is_secret_token(dec_s) or prev_frag_is_sec:
-                    safe_frag_segs.append("[redacted]")
-                else:
-                    safe_frag_segs.append(s)
-                clean_s = dec_s.strip().lower()
-                prev_frag_is_sec = (
-                    clean_s in _SECRET_KEYS
-                    or clean_s in _UNAMBIGUOUS_SECRET_SUBSTRINGS
-                    or "password" in clean_s
-                    or "passwd" in clean_s
-                    or "token" in clean_s
-                    or "secret" in clean_s
-                )
-            safe_frag_path = "/".join(safe_frag_segs)
+            safe_frag_path = _redact_path(frag_path)
             if has_q:
                 safe_fragment = f"{safe_frag_path}?{_redact_param_string(frag_query)}"
             else:
@@ -522,23 +508,11 @@ def redact_diagnostic(value: str, cap: int | None = DIAGNOSTIC_CHARS) -> str:
             is_auth_header = (
                 clean_word == "authorization" and has_delim
             ) or lower.startswith(("authorization:", "authorization="))
-            if is_auth_header:
-                words.append("[REDACTED]")
-                if i + 1 < len(raw_words) and raw_words[i + 1] in (":", "="):
-                    words.append("[REDACTED]")
-                    i += 1
-                j = i + 1
-                while j < len(raw_words):
-                    words.append("[REDACTED]")
-                    j += 1
-                i = j
-                continue
-
             # 2. Secret headers like Set-Cookie:, Cookie:, etc. (multiple subsequent cookie tokens)
             is_cookie_header = (
                 clean_word in ("cookie", "set-cookie") and has_delim
             ) or lower.startswith(("set-cookie:", "set-cookie=", "cookie:", "cookie="))
-            if is_cookie_header:
+            if is_auth_header or is_cookie_header:
                 words.append("[REDACTED]")
                 if i + 1 < len(raw_words) and raw_words[i + 1] in (":", "="):
                     words.append("[REDACTED]")

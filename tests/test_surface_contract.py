@@ -1,9 +1,9 @@
 """Surface contract of the nBROWSER MCP door — a DESCENDING RATCHET.
 
-Both fractions below are MEASURED on this tree, not desired. The file lands
-GREEN on purpose: the day a tool gains a real handler or a real input schema,
-this test turns RED and forces whoever implemented it to delete that name here
-and lower the number. Red is progress, never a block.
+The fraction below is MEASURED on this tree, not desired. The file lands
+GREEN on purpose: the day a tool gains a real input schema, this test turns RED
+and forces whoever implemented it to delete that name here and lower the number.
+Red is progress, never a block.
 """
 
 import ast
@@ -13,12 +13,7 @@ from typing import Any, cast
 import pytest
 
 from nbrowser import mcp_server
-from nbrowser.errors import BrowserError, failure_envelope
 from nbrowser.mcp_server import INPUT_SCHEMAS, TOOL_NAMES, TOOLS, McpServer
-
-# Measured: 0 of the 14 declared tools refuse not_implemented. The symbol stays
-# so the ratchet has a place to name the next declared-but-unbuilt tool.
-UNIMPLEMENTED_TOOLS: frozenset[str] = frozenset()
 
 # Measured: 5 of the 14 announce `inputSchema.properties == {}`, because their
 # dispatch branches read no parameters.
@@ -37,24 +32,8 @@ ANNOUNCED: dict[str, dict[str, Any]] = {
 }
 
 
-def test_zero_of_fourteen_tools_are_declared_but_not_implemented() -> None:
-    assert len(TOOL_NAMES) == 14
-    assert len(UNIMPLEMENTED_TOOLS) == 0
-    assert UNIMPLEMENTED_TOOLS <= set(TOOL_NAMES)
-
-    server = McpServer()
-    measured: dict[str, object] = {}
-    for name in sorted(UNIMPLEMENTED_TOOLS):
-        with pytest.raises(BrowserError) as exc:
-            server.handle_tool_call(name, {})
-        measured[name] = failure_envelope(exc.value)["code"]
-
-    # A caller must read "this tool does not exist yet", never "your arguments
-    # are wrong" — the two collapsed into invalid_input before this contract.
-    assert measured == {name: "not_implemented" for name in sorted(UNIMPLEMENTED_TOOLS)}
-
-
 def test_five_of_fourteen_tools_announce_an_empty_input_schema() -> None:
+    assert len(TOOL_NAMES) == 14
     assert len(EMPTY_SCHEMA_TOOLS) == 5
     assert set(TOOL_NAMES) - EMPTY_SCHEMA_TOOLS == {
         "nbrowser_page_capture",

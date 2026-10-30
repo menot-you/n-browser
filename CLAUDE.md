@@ -45,7 +45,7 @@ Never point a test at `~/.nott/state/database` or store real credentials in test
 
 - Write all code comments, docstrings, commit messages, pull requests, and documentation in Simplified Technical English (ASD-STE100). Keep sentences under 25 words and use active voice.
 - Write the regression test first for any behavior change. Observe the test fail (`RED`) before editing product code.
-- Keep search provider keys (`TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `ZAI_API_KEY`, `MINIMAX_API_KEY`) in the process environment only.
+- Keep search provider keys (`TAVILY_API_KEY`, `FIRECRAWL_API_KEY`) in the process environment only.
 
 ## Canonical documentation map
 
@@ -56,7 +56,7 @@ Never point a test at `~/.nott/state/database` or store real credentials in test
 | Service rings and trust boundaries | [Architecture](docs/ARCHITECTURE.md) |
 | Setup, operation, backup, and restoration | [Runbook](docs/RUNBOOK.md) |
 | Complete MCP tool and CLI command reference | [Reference](docs/REFERENCE.md) |
-| Developer toolkit and Context7/RTK setup | [Setup](docs/SETUP.md) and [setup-catalog.json](docs/setup-catalog.json) |
+| Developer toolkit and Context7/RTK setup | [Setup](docs/SETUP.md) |
 | Quality gates and security review | [Quality](docs/QUALITY.md) |
 | Source installation and prerequisites | [Installation](docs/INSTALLATION.md) |
 | Data boundaries and external processing choices | [Privacy](docs/PRIVACY.md) |

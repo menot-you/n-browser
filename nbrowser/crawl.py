@@ -2,30 +2,17 @@
 dispatches. The frontier (frontier.py) is pure; the one socket it needs, for
 robots.txt, is transfer.download_host. Every page loads inside ONE isolated browser context
 per call, disposed in `finally`; same-origin is judged on location.href AFTER
-the load, against the SEED's scheme+host+port. A cursor is a ContentRef of
-the capture authority over the digest of the canonical frontier state, held
-in the per-process resolver: it resumes once, and only in this process."""
+the load, against the SEED's scheme+host+port. A cursor is the digest of the
+canonical frontier state, held in the per-process resolver: it resumes once,
+and only in this process."""
 
 from __future__ import annotations
 
-import base64
-import binascii
 import json
 import secrets
 import time
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
-
-from nott_spine import (
-    AuthorityError,
-    ContractError,
-    OriginKind,
-    OriginMetadata,
-    RetentionPolicy,
-    SourceCapability,
-    TaintClass,
-    UntrustedContentRef,
-)
 
 from .errors import BrowserError, FailureCode, InputFailure
 from .extract import scrape_markdown_live
@@ -50,8 +37,6 @@ if TYPE_CHECKING:
 # plus 30 s per CDP command. Over the deadline the call answers what it has
 # and a cursor — that is what the cursor exists for.
 CRAWL_DEADLINE_S = 120.0
-# Refused by length BEFORE base64/json touch the bytes.
-CURSOR_WIRE_CAP = 2048
 # Outstanding cursors per process; the oldest is evicted from custody.
 MAX_OUTSTANDING_CURSORS = 8
 # a.href is already absolute in the browser; the frontier gates origin.
@@ -125,7 +110,7 @@ def _walk(
 
 
 def mint_cursor(server: McpServer, state: dict[str, Any]) -> str:
-    """Stage the canonical state, bind its digest under the process key."""
+    """Stage the canonical state. Its digest is the cursor."""
     data = canonical_state_bytes(
         {**state, "invocation": state.get("invocation") or secrets.token_hex(8)}
     )
@@ -136,14 +121,7 @@ def mint_cursor(server: McpServer, state: dict[str, Any]) -> str:
             old = server.cursor_digests.pop(0)
             with server.resolver.lock:
                 server.resolver.store.pop(old, None)
-    origin = OriginMetadata.derived_content(origin_key(str(state["seed"])))
-    ref = server.content_authority.issuer(SourceCapability.NBrowser).issue(
-        "sha256:" + digest,
-        origin,
-        RetentionPolicy.EphemeralSession,
-        TaintClass.PageDerived,
-    )
-    return base64.urlsafe_b64encode(ref.to_json().encode("utf-8")).decode("ascii")
+    return digest
 
 
 def resume_cursor(
@@ -153,46 +131,14 @@ def resume_cursor(
         raise BrowserError(
             InputFailure.CONTENT_REF, "cursor must be a non-empty string"
         )
-    if len(wire.encode("utf-8")) > CURSOR_WIRE_CAP:
-        raise BrowserError(
-            InputFailure.CONTENT_REF, f"cursor exceeds {CURSOR_WIRE_CAP} bytes"
-        )
-    try:
-        raw = json.loads(base64.urlsafe_b64decode(wire.encode("ascii")))
-    except binascii.Error, ValueError, UnicodeError:
-        raise BrowserError(
-            InputFailure.CONTENT_REF, "cursor is not base64url JSON"
-        ) from None
-    if not isinstance(raw, dict):
-        raise BrowserError(InputFailure.CONTENT_REF, "cursor is not a content ref")
-    try:
-        resolved = server.content_authority.resolver().resolve(
-            UntrustedContentRef.from_dict(raw)
-        )
-    except ContractError as e:
-        raise BrowserError(
-            InputFailure.CONTENT_REF, f"cursor fields invalid: {e}"
-        ) from None
-    except AuthorityError:
-        raise BrowserError(
-            InputFailure.CONTENT_REF, "cursor minted by another process"
-        ) from None
-    if resolved.origin.kind is not OriginKind.DerivedContent:
-        raise BrowserError(InputFailure.CONTENT_REF, "ref is not a crawl cursor")
-    if host_url is not None and origin_key(str(host_url)) != resolved.origin.locator:
-        raise BrowserError(
-            InputFailure.CONTENT_REF,
-            f"cursor was minted for {resolved.origin.locator}; host_url is {origin_key(str(host_url))}",
-        )
-    digest = resolved.digest.removeprefix("sha256:")
-    if digest not in server.cursor_digests:
+    if wire not in server.cursor_digests:
         raise BrowserError(
             FailureCode.CONTENT_UNAVAILABLE, "cursor already resumed or unknown"
         )
     with server.resolver.lock:
-        held = server.resolver.store.get(digest)
+        held = server.resolver.store.get(wire)
     if held is None:
-        server.cursor_digests.remove(digest)
+        server.cursor_digests.remove(wire)
         raise BrowserError(
             FailureCode.CONTENT_UNAVAILABLE, "cursor already resumed or unknown"
         )
@@ -202,8 +148,14 @@ def resume_cursor(
             InputFailure.CONTENT_REF,
             f"cursor of kind {state.get('kind')!r} presented to {kind}",
         )
-    server.cursor_digests.remove(digest)
-    server.resolver.resolve_once(digest)
+    seed = origin_key(str(state["seed"]))
+    if host_url is not None and origin_key(str(host_url)) != seed:
+        raise BrowserError(
+            InputFailure.CONTENT_REF,
+            f"cursor was minted for {seed}; host_url is {origin_key(str(host_url))}",
+        )
+    server.cursor_digests.remove(wire)
+    server.resolver.resolve_once(wire)
     return state
 
 

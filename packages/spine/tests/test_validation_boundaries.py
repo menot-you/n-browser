@@ -4,10 +4,8 @@ from typing import Any
 
 import pytest
 
-from nott_spine.authority import ContentAuthority, UntrustedContentRef
 from nott_spine.errors import (
     EmptyViewport,
-    InvalidAuthorityKey,
     InvalidDevicePixelRatio,
     InvalidOrigin,
     MissingCaptureFrame,
@@ -16,25 +14,7 @@ from nott_spine.types import (
     CaptureFrame,
     OriginKind,
     OriginMetadata,
-    RetentionPolicy,
-    SourceCapability,
-    TaintClass,
 )
-
-
-def source_ref() -> Any:
-    return (
-        ContentAuthority.from_secret(bytes(range(32)))
-        .issuer(SourceCapability.NBrowser)
-        .issue(
-            "sha256:" + "a" * 64,
-            OriginMetadata.browser_capture(
-                "fixture://page", capture_frame=CaptureFrame(1280, 720, 2, "x")
-            ),
-            RetentionPolicy.NoStore,
-            TaintClass.PixelDerived,
-        )
-    )
 
 
 @pytest.mark.parametrize("axis", ["viewport_width_css_px", "viewport_height_css_px"])
@@ -68,24 +48,6 @@ def test_capture_dpr_is_a_finite_number_not_a_boolean(value: Any) -> None:
         CaptureFrame(1280, 720, value, "x")
 
 
-@pytest.mark.parametrize("axis", ["x", "y"])
-@pytest.mark.parametrize(
-    "value", [True, False, "1", None, 10**400, float("nan"), float("inf"), -1]
-)
-def test_source_points_refuse_malformed_values(axis: str, value: Any) -> None:
-    point = {"x": 1, "y": 2}
-    point[axis] = value
-
-
-@pytest.mark.parametrize("field", ["source_capability", "retention", "taint"])
-@pytest.mark.parametrize("value", [True, 1, 1.0, None, [], {}])
-def test_content_enum_fields_refuse_non_enums(field: str, value: Any) -> None:
-    fields = source_ref().to_dict()
-    fields[field] = value
-    with pytest.raises(InvalidOrigin):
-        UntrustedContentRef.from_dict(fields)
-
-
 @pytest.mark.parametrize("kind", [True, 1, 1.0, None, [], {}])
 def test_origin_kind_refuses_non_enums(kind: Any) -> None:
     with pytest.raises(InvalidOrigin):
@@ -104,14 +66,6 @@ def test_direct_origin_constructor_requires_capture_frame(kind: OriginKind) -> N
 def test_origin_refuses_non_frame_objects(frame: Any) -> None:
     with pytest.raises(MissingCaptureFrame):
         OriginMetadata("fixture", "fixture://page", capture_frame=frame)
-
-
-@pytest.mark.parametrize(
-    "secret", [True, 32, None, "x" * 32, [True] * 32, [256] * 32, [-1] * 32, [1.0] * 32]
-)
-def test_authority_key_refuses_non_byte_values(secret: Any) -> None:
-    with pytest.raises(InvalidAuthorityKey):
-        ContentAuthority.from_secret(secret)
 
 
 @pytest.mark.parametrize("text", ["\ud800", "valid\udfff"])

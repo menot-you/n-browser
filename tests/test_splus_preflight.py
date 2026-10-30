@@ -23,7 +23,7 @@ from nbrowser.transfer import (
     "url,error",
     [
         ("https:///a", "missing_host"),
-        ("http://api.z.ai/a", "unapproved_scheme: only https is allowed"),
+        ("http://api.tavily.com/a", "unapproved_scheme: only https is allowed"),
         ("https://outside.test/a", "unapproved_host: outside.test"),
     ],
 )

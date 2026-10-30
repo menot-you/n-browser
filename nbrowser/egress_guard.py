@@ -1,18 +1,9 @@
-import enum
 import ipaddress
 import socket
 from collections.abc import Sequence
 from urllib.parse import urlparse
 
 from .errors import BrowserError, FailureCode
-
-
-class ActivationMode(str, enum.Enum):
-    FIXTURE_ONLY = "fixture_only"
-    LOCAL_DOM_EXCEPTION = "local_dom_exception"
-
-    def allows_local_activation(self) -> bool:
-        return self is ActivationMode.LOCAL_DOM_EXCEPTION
 
 
 def bare_host(url: str) -> str | None:
@@ -100,21 +91,6 @@ def is_suspicious_hostname(bare: str) -> bool:
 def is_public_safe(url: str) -> bool:
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
-        return False
-
-    bare = bare_host(url)
-    if not bare:
-        return False
-
-    if is_loopback_host(bare):
-        return True
-
-    return not (is_private_host(bare) or is_suspicious_hostname(bare))
-
-
-def is_public_safe_ws(url: str) -> bool:
-    parsed = urlparse(url)
-    if parsed.scheme not in ("ws", "wss", "http", "https"):
         return False
 
     bare = bare_host(url)

@@ -24,7 +24,7 @@ Source: [mcp_server.py](../nbrowser/mcp_server.py), `TOOL_NAMES` and `INPUT_SCHE
 
 ## MCP Tools (14 declared, 14 with a handler)
 
-14 declared, **14 with a handler**, 0 declared and not implemented.
+14 declared, **14 with a handler**.
 
 A handler can return evidence or a typed refusal. A handler does not prove that its host prerequisites exist.
 

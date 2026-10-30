@@ -215,9 +215,7 @@ def test_frame_origin_tracking_blocks_redirect_to_public_then_loopback_and_isola
         assert engine.frame()["method"] == "Fetch.continueRequest"
 
         # Late Page.navigate reply arrives and must NOT overwrite the observed public origin:
-        engine.client._record_navigation_reply(
-            "s1", "f-main", "http://127.0.0.1:8000/start"
-        )
+        engine.client._record_navigation_reply("s1", "f-main")
         assert engine.client._frame_origins["f-main"] == "https://example.com/landing"
 
         # Subsequent request from f-main to loopback without Origin/Referer is refused:

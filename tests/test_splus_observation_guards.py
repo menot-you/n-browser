@@ -1,7 +1,6 @@
 """Native observation guards."""
 
 import pytest
-from nott_spine import ReceiptRung, TaintClass
 
 from nbrowser.extract import SnapshotEvidence
 from nbrowser.sanitize import redact_asset_url_keep_path
@@ -28,9 +27,6 @@ def test_tools_list_is_wire_visible() -> None:
     server.last_snapshot = SnapshotEvidence(
         SemanticView(url="https://fixture.test", title="T", visible_text="body"),
         "digest",
-        TaintClass.PageDerived,
-        ReceiptRung.UnwitnessedLocal,
-        "tainted",
     )
     try:
         assert {tool.name for tool in SDK_TOOLS} == set(TOOL_NAMES)

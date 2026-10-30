@@ -465,7 +465,6 @@ def test_door_capture_pixels_never_ride_stdio(monkeypatch: pytest.MonkeyPatch) -
         assert managed.get("isError") is not True, managed
         kept = json.loads(managed["content"][0]["text"])
         assert kept["retention"] == "managed_purgeable"
-        assert kept["source"]["retention"] == "managed_purgeable"
         path = nott_database.directory().parent / "captures" / f"{kept['sha256']}.png"
         assert hashlib.sha256(path.read_bytes()).hexdigest() == kept["sha256"]
     finally:
@@ -756,7 +755,7 @@ def test_door_console_network_group_reads_engine_frames() -> None:
         site.shutdown()
 
 
-def test_door_capture_signs_the_frame_and_content_show_refuses_its_bytes() -> None:
+def test_door_capture_keeps_the_pixels_and_content_show_refuses_its_bytes() -> None:
     from nbrowser.private_root import chromium_present
 
     if not chromium_present():
@@ -774,12 +773,6 @@ def test_door_capture_signs_the_frame_and_content_show_refuses_its_bytes() -> No
         shot = _payload(door.call("nbrowser_page_capture", {"retention": "no_store"}))
         assert shot["ref"] == "capture:" + shot["sha256"]
         assert len(shot["sha256"]) == 64
-        source = shot["source"]
-        assert source["origin"]["kind"] == "browser_capture"
-        assert source["origin"]["locator"] == base
-        frame = source["origin"]["capture_frame"]
-        assert frame["viewport_width_css_px"] > 0
-        assert frame["viewport_height_css_px"] > 0
         refused = door.call("nbrowser_content_show", {"ref": shot["ref"]})
         assert refused["isError"] is True
         assert _payload(refused)["code"] == "content_unavailable"

@@ -6,7 +6,6 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from nott_spine import ReceiptRung, TaintClass
 
 from nbrowser.errors import BrowserError, FailureCode, InputFailure
 from nbrowser.extract import SnapshotEvidence
@@ -84,9 +83,6 @@ def test_extract_branches(patch_server: McpServer) -> None:
     patch_server.last_snapshot = SnapshotEvidence(
         view=None,  # type: ignore[arg-type]
         digest="d",
-        taint=TaintClass.PageDerived,
-        rung=ReceiptRung.UnwitnessedLocal,
-        instruction_policy="redact",
     )
     with pytest.raises(BrowserError) as exc_noview:
         patch_server.handle_tool_call("nbrowser_page_extract", {})
@@ -99,29 +95,24 @@ def test_extract_branches(patch_server: McpServer) -> None:
     patch_server.last_snapshot = SnapshotEvidence(
         view=view_match,
         digest="d",
-        taint=TaintClass.PageDerived,
-        rung=ReceiptRung.UnwitnessedLocal,
-        instruction_policy="redact",
     )
     res_m = patch_server.handle_tool_call("nbrowser_page_extract", {"what": "Alpha"})
     assert len(res_m["matches"]) == 1
     assert "Alpha" in res_m["matches"][0]
 
-    # 4. what given but no matches in text_blocks, falls back to visible_text
+    # 4. what given and no text block has it: no match, even with visible text
     view_fb = SemanticView(
         url="https://example.com",
         text_blocks=["Alpha"],
-        visible_text="Fallback Text Content",
+        visible_text="Page Text Without The Word",
     )
     patch_server.last_snapshot = SnapshotEvidence(
         view=view_fb,
         digest="d2",
-        taint=TaintClass.PageDerived,
-        rung=ReceiptRung.UnwitnessedLocal,
-        instruction_policy="redact",
     )
     res_fb = patch_server.handle_tool_call("nbrowser_page_extract", {"what": "Gamma"})
-    assert res_fb["matches"] == ["Fallback Text Content"]
+    assert res_fb["matches"] == []
+    assert res_fb["count"] == 0
 
     # 5. what given, no matches in text_blocks, and visible_text is empty
     view_novis = SemanticView(
@@ -130,9 +121,6 @@ def test_extract_branches(patch_server: McpServer) -> None:
     patch_server.last_snapshot = SnapshotEvidence(
         view=view_novis,
         digest="d3",
-        taint=TaintClass.PageDerived,
-        rung=ReceiptRung.UnwitnessedLocal,
-        instruction_policy="redact",
     )
     res_novis = patch_server.handle_tool_call(
         "nbrowser_page_extract", {"what": "Gamma"}

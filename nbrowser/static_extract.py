@@ -47,7 +47,6 @@ def decode_body(data: bytes, content_encoding: str | None) -> str:
 @dataclass
 class StaticPage:
     markdown: str
-    links: list[str]
     empty: bool
     ordered_markdown: str = ""
 
@@ -77,7 +76,6 @@ class _Projection(HTMLParser):
         # follows the segment that holds its text.
         self.segments: list[tuple[object, str, list[str], list[str]]] = []
         self._anchor_key = 0
-        self.links: list[str] = []
 
     def _absolute(self, href: str) -> str | None:
         try:
@@ -124,9 +122,6 @@ class _Projection(HTMLParser):
             self._anchor_key += 1
             self._anchor = []
             self._anchor_href = href
-            target = self._absolute(href) if href else None
-            if target is not None and target not in self.links:
-                self.links.append(target)
 
     def handle_endtag(self, tag: str) -> None:
         if tag in SKIPPED:
@@ -207,7 +202,6 @@ def project(html: str, base_url: str) -> StaticPage:
     ordered_markdown = "\n\n".join(ordered)
     return StaticPage(
         markdown=markdown,
-        links=parser.links,
         empty=not headings and not blocks,
         ordered_markdown=ordered_markdown,
     )

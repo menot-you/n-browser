@@ -34,11 +34,6 @@ def test_projection_has_the_walker_shape() -> None:
         "Hello bold world\n\none\n\ntwo\n\ntwo\n\na b\n\nq\n\n"
         "[Next](http://127.0.0.1:8765/next)\n\n[Ext](https://example.com/)"
     )
-    assert page.links == [
-        "http://127.0.0.1:8765/next",
-        "http://127.0.0.1:8765/dir/x.html",
-        "https://example.com/",
-    ]
     assert page.empty is False
 
 
@@ -46,7 +41,6 @@ def test_noscript_shell_is_empty_and_scripts_never_leak() -> None:
     page = project(SHELL, BASE)
     assert page.empty is True
     assert page.markdown == ""
-    assert page.links == []
     styled = project("<style>p{}</style><script>var x='<p>y</p>'</script>", BASE)
     assert styled.empty is True and styled.markdown == ""
     links_only = project('<a href="/a">A</a>', BASE)
@@ -66,16 +60,17 @@ def test_link_scheme_gate_and_base_href() -> None:
         '<a href="/a#frag">again</a><a href="HTTPS://Example.com/">u</a>'
     )
     page = project(html, BASE)
-    assert page.links == [
-        "http://evil.com/x",
-        "http://localhost:8765/x",
-        "http://127.0.0.1:9222/json",
-        "http://127.0.0.1:8765/a#frag",
-        "HTTPS://Example.com/",
+    assert page.markdown.split("\n\n") == [
+        "[e](http://evil.com/x)",
+        "[l](http://localhost:8765/x)",
+        "[p](http://127.0.0.1:9222/json)",
+        "[a](http://127.0.0.1:8765/a#frag)",
+        "[again](http://127.0.0.1:8765/a#frag)",
+        "[u](HTTPS://Example.com/)",
     ]
     assert "javascript:" not in page.markdown and "file:" not in page.markdown
     based = project('<base href="https://other.example/root/"><a href="x">x</a>', BASE)
-    assert based.links == ["https://other.example/root/x"]
+    assert based.markdown == "[x](https://other.example/root/x)"
 
 
 def test_decode_body_handles_gzip_and_garbage() -> None:
@@ -174,7 +169,7 @@ def test_malformed_href_preserves_readable_document() -> None:
         "http://127.0.0.1:8765/",
     )
     assert "readable document" in page.markdown
-    assert page.links == []
+    assert "http://[broken" not in page.markdown
 
 
 def test_malformed_base_preserves_original_base() -> None:
@@ -182,7 +177,7 @@ def test_malformed_base_preserves_original_base() -> None:
         '<base href="http://[broken"><p>x</p><a href="/n">N</a>',
         "http://127.0.0.1:8765/",
     )
-    assert page.links == ["http://127.0.0.1:8765/n"]
+    assert page.markdown == "x\n\n[N](http://127.0.0.1:8765/n)"
 
 
 def test_markdown_outline_and_section_filtering() -> None:
@@ -243,30 +238,27 @@ def test_markdown_outline_and_section_filtering() -> None:
 
 
 @pytest.mark.parametrize(
-    "html,markdown,links,empty",
+    "html,markdown,empty",
     [
         (
             '<base><base href="/base/"><a href="next">Next</a>',
             "[Next](http://127.0.0.1:8765/base/next)",
-            ["http://127.0.0.1:8765/base/next"],
             True,
         ),
         (
             "<ul><li>outer <ul><li>inner</li></ul></li></ul>",
             "outer inner\n\ninner",
-            [],
             False,
         ),
-        ("<blockquote><pre>x</blockquote></pre>", "x\n\nx", [], False),
-        ("<p></p><h2></h2>", "", [], True),
+        ("<blockquote><pre>x</blockquote></pre>", "x\n\nx", False),
+        ("<p></p><h2></h2>", "", True),
     ],
 )
 def test_projection_handles_empty_base_nested_lists_and_unmatched_end_tags(
-    html: str, markdown: str, links: list[str], empty: bool
+    html: str, markdown: str, empty: bool
 ) -> None:
     page = project(html, BASE)
     assert page.markdown == markdown
-    assert page.links == links
     assert page.empty is empty
 
 
